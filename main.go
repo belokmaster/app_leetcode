@@ -6,7 +6,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -44,14 +43,23 @@ func main() {
 	// Текущая дата
 	now := time.Now()
 
-	// Создать срез для хранения адресов ячеек, которые удовлетворяют условиям
-	var cellAddresses []string
+	// Список задач, удовлетворяющих условиям
+	var neededTasks []struct {
+		RowNumber int
+		Date      string
+		TaskNum   string
+		IsSolved  string
+	}
 
-	// Пройтись по всем строкам и проверить значения в первом и четвертом столбцах
+	// Парсинг строк из Excel
 	for i, row := range rows {
+		if i == 0 {
+			continue
+		}
+
 		if len(row) >= 4 {
 			// Парсить дату из первого столбца
-			date, err := time.Parse("02-01-06", row[0]) // Измените формат даты, если он отличается
+			date, err := time.Parse("02-01-06", row[0])
 			if err != nil {
 				continue
 			}
@@ -60,15 +68,25 @@ func main() {
 			if now.Sub(date).Hours() > 14*24 {
 				// Проверить значение в четвертом столбце
 				if row[3] != "0" {
-					cell := fmt.Sprintf("A%d", i+1)
-					cellAddresses = append(cellAddresses, cell) // сохранить адрес ячейки
+					rowNumber := i + 1 // Номер строки в Excel
+					neededTasks = append(neededTasks, struct {
+						RowNumber int
+						Date      string
+						TaskNum   string
+						IsSolved  string
+					}{
+						RowNumber: rowNumber,
+						Date:      row[0],
+						TaskNum:   row[1],
+						IsSolved:  row[3],
+					})
 				}
 			}
 		}
 	}
 
-	// Проверить, есть ли значения в срезе
-	if len(cellAddresses) == 0 {
+	// Проверить, есть ли значения в мапе
+	if len(neededTasks) == 0 {
 		fmt.Println("Нет ячеек, удовлетворяющих условиям")
 		return
 	}
@@ -77,10 +95,10 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	// Получить случайный индекс и значение из cellAddresses
-	randomIndex := rand.Intn(len(cellAddresses))
-	randomCell := cellAddresses[randomIndex]
+	randomIndex := rand.Intn(len(neededTasks))
+	randomTask := neededTasks[randomIndex]
 
-	fmt.Println("Случайная ячейка, удовлетворяющая условиям:", randomCell)
+	fmt.Printf("Случайная задача:\nПоследняя дата решения: %s\nНомер задачи: %s\n", randomTask.Date, randomTask.TaskNum)
 
 	// Спросить у пользователя, решена ли задача
 	reader := bufio.NewReader(os.Stdin)
@@ -92,12 +110,15 @@ func main() {
 	if input == "1" {
 		// Обновить дату в соответствующей ячейке на текущую дату
 		today := now.Format("02-01-06")
-		rowNumber, err := strconv.Atoi(randomCell[1:])
+		cell := fmt.Sprintf("A%d", randomTask.RowNumber) // Ячейка с датой
+		err = f.SetCellValue(sheetName, cell, today)
 		if err != nil {
 			log.Fatal(err)
 		}
-		cell := fmt.Sprintf("A%d", rowNumber)
-		err = f.SetCellValue(sheetName, cell, today)
+
+		// Обновить значение в столбце "solved task" на 0
+		solvedCell := fmt.Sprintf("D%d", randomTask.RowNumber) // Ячейка с решением задачи
+		err = f.SetCellValue(sheetName, solvedCell, "0")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -107,8 +128,8 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Println("Дата в ячейке", randomCell, "обновлена на сегодняшнюю:", today)
+		fmt.Println("Дата в строке", randomTask.RowNumber, "обновлена на сегодняшнюю:", today)
 	} else {
-		fmt.Println("Дата в ячейке", randomCell, "осталась без изменений.")
+		fmt.Println("Дата в строке", randomTask.RowNumber, "осталась без изменений.")
 	}
 }
