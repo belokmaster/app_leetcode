@@ -23,5 +23,5 @@ func main() {
 	randomTask := pickRandomTask(neededTasks)
 
 	// обработка пользовательского ввода
-	processUserInput(f, sheetName, randomTask)
+	ProcessUserInput(f, sheetName, randomTask, neededTasks)
 }

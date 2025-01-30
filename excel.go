@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -33,6 +34,27 @@ func closeExcelFile(f *excelize.File) {
 func updateExcelCell(f *excelize.File, sheetName, cell, value string) {
 	err := f.SetCellValue(sheetName, cell, value)
 	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func updateExcelCellCountSolved(f *excelize.File, sheetName, cell string) {
+	// Получаем текущее значение из ячейки
+	currentValue, err := f.GetCellValue(sheetName, cell)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Конвертируем значение в число
+	num, err := strconv.Atoi(currentValue)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	num++
+	newValue := strconv.Itoa(num)
+
+	if err := f.SetCellValue(sheetName, cell, newValue); err != nil {
 		log.Fatal(err)
 	}
 }
