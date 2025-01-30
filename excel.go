@@ -8,7 +8,7 @@ import (
 )
 
 /*
-	Этот файл будет содержать функции для работы с Excel: открытия файла, закрытия, чтения данных и обновления ячеек.
+	Этот файл содержит функции для работы с Excel: открытия файла, закрытия, чтения данных и обновления ячеек.
 */
 
 func openExcelFile(fileName string) (*excelize.File, string) {
@@ -22,7 +22,7 @@ func openExcelFile(fileName string) (*excelize.File, string) {
 		log.Fatal("Файл Excel не содержит листов")
 	}
 
-	return f, sheetList[0] // Возвращаем файл и имя первого листа
+	return f, sheetList[0]
 }
 
 func closeExcelFile(f *excelize.File) {

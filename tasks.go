@@ -17,7 +17,7 @@ type Task struct {
 	countSolved string
 }
 
-func getNeededTasks(f *excelize.File, sheetName string, now time.Time) []Task {
+func getNeededTasks(f *excelize.File, sheetName string, now time.Time, taskInd int) []Task {
 	rows, err := f.GetRows(sheetName)
 	if err != nil {
 		log.Fatal(err)
@@ -34,15 +34,28 @@ func getNeededTasks(f *excelize.File, sheetName string, now time.Time) []Task {
 			continue
 		}
 
-		if now.Sub(date).Hours() > 14*24 && row[2] != "0" {
-			neededTasks = append(neededTasks, Task{
-				RowNumber:   i + 1,
-				Date:        row[0],
-				TaskNum:     row[1],
-				IsSolved:    row[2],
-				Difficulty:  row[3],
-				countSolved: row[4],
-			})
+		if taskInd == 0 {
+			if now.Sub(date).Hours() > 14*24 && row[2] != "0" {
+				neededTasks = append(neededTasks, Task{
+					RowNumber:   i + 1,
+					Date:        row[0],
+					TaskNum:     row[1],
+					IsSolved:    row[2],
+					Difficulty:  row[3],
+					countSolved: row[4],
+				})
+			}
+		} else {
+			if now.Sub(date).Hours() > 14*24 && row[2] == "0" {
+				neededTasks = append(neededTasks, Task{
+					RowNumber:   i + 1,
+					Date:        row[0],
+					TaskNum:     row[1],
+					IsSolved:    row[2],
+					Difficulty:  row[3],
+					countSolved: row[4],
+				})
+			}
 		}
 	}
 

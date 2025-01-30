@@ -9,34 +9,46 @@ import (
 )
 
 func main() {
-	// Открыть файл Excel
 	f, sheetName := openExcelFile("example.xlsx")
 	defer closeExcelFile(f)
 
-	fmt.Println("Введите цифру (1 - для добавления новой задачи, 2 - для решения старых, q - выход):")
+	fmt.Println("Введите значение: ")
+	fmt.Println("1 - для получения случайной задачи")
+	fmt.Println("2 - для получения нерешенной случайной задачи")
+	fmt.Println("q - для выхода из программы")
+
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
 	input = strings.TrimSpace(input)
 
-	if input == "q" || input == "1" {
+	if input == "q" {
 		fmt.Println("Выход из программы.")
 		return
 	}
 
-	if input == "2" {
+	if input == "1" {
 		// Получаем задачи, удовлетворяющие условиям
-		neededTasks := getNeededTasks(f, sheetName, time.Now())
+		neededTasks := getNeededTasks(f, sheetName, time.Now(), 1)
 
-		// Проверить, есть ли подходящие задачи
 		if len(neededTasks) == 0 {
 			fmt.Println("Нет ячеек, удовлетворяющих условиям")
 			return
 		}
 
-		// выбираем случайную задачу
 		randomTask := pickRandomTask(neededTasks)
+		ProcessUserInput(f, sheetName, randomTask, neededTasks)
+	}
 
-		// обработка пользовательского ввода
+	if input == "2" {
+		// Получаем задачи, удовлетворяющие условиям
+		neededTasks := getNeededTasks(f, sheetName, time.Now(), 0)
+
+		if len(neededTasks) == 0 {
+			fmt.Println("Нет ячеек, удовлетворяющих условиям")
+			return
+		}
+
+		randomTask := pickRandomTask(neededTasks)
 		ProcessUserInput(f, sheetName, randomTask, neededTasks)
 	}
 }
