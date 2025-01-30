@@ -10,12 +10,11 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// ProcessUserInput обрабатывает пользовательский ввод и обновляет Excel.
 func ProcessUserInput(f *excelize.File, sheetName string, task Task, neededTasks []Task) {
 	for {
 		fmt.Printf("Случайная задача:\n[ ] Последняя дата решения: %s\n[ ] Номер задачи: %s\n", task.Date, task.TaskNum)
-
 		reader := bufio.NewReader(os.Stdin)
+
 		fmt.Println("Решили ли вы задачу? (1 - да, 0 - нет, q - выход):")
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
@@ -28,9 +27,9 @@ func ProcessUserInput(f *excelize.File, sheetName string, task Task, neededTasks
 		if input == "1" {
 			// Обновить дату и статус задачи
 			today := time.Now().Format("02-01-06")
-			updateExcelCell(f, sheetName, fmt.Sprintf("A%d", task.RowNumber), today)
-			updateExcelCell(f, sheetName, fmt.Sprintf("C%d", task.RowNumber), "0")
-			updateExcelCellCountSolved(f, sheetName, fmt.Sprintf("E%d", task.RowNumber))
+			updateExcelCell(f, sheetName, fmt.Sprintf("A%d", task.RowNumber), today)     // обновляем дату на сегодняшную
+			updateExcelCell(f, sheetName, fmt.Sprintf("C%d", task.RowNumber), "0")       // обнуляем счетчик решения с подсказкой
+			updateExcelCellCountSolved(f, sheetName, fmt.Sprintf("E%d", task.RowNumber)) //+= 1 решений
 			saveExcelFile(f, "example.xlsx")
 
 			fmt.Println("Дата в строке", task.RowNumber, "обновлена на сегодняшнюю:", today)
@@ -44,13 +43,12 @@ func ProcessUserInput(f *excelize.File, sheetName string, task Task, neededTasks
 		// Удаляем обработанную задачу из списка
 		neededTasks = removeTask(neededTasks, task)
 
-		// Проверяем, остались ли задачи
+		// Проверяем, остались ли задачи в списке
 		if len(neededTasks) == 0 {
 			fmt.Println("Нет задач, удовлетворяющих условиям.")
 			return
 		}
 
-		// Выбираем следующую случайную задачу
 		task = pickRandomTask(neededTasks)
 	}
 }
