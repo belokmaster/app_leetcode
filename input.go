@@ -10,6 +10,15 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+func addNewRow(f *excelize.File, sheetName string, newTask Task) {
+	updateExcelCell(f, sheetName, fmt.Sprintf("A%d", newTask.RowNumber), newTask.Date)
+	updateExcelCell(f, sheetName, fmt.Sprintf("B%d", newTask.RowNumber), newTask.TaskNum)
+	updateExcelCell(f, sheetName, fmt.Sprintf("C%d", newTask.RowNumber), newTask.IsSolved)
+	updateExcelCell(f, sheetName, fmt.Sprintf("D%d", newTask.RowNumber), newTask.Difficulty)
+	updateExcelCell(f, sheetName, fmt.Sprintf("E%d", newTask.RowNumber), newTask.countSolved)
+	saveExcelFile(f, "example.xlsx")
+}
+
 func ProcessUserInput(f *excelize.File, sheetName string, task Task, neededTasks []Task) {
 	for {
 		fmt.Printf("Случайная задача:\n[ ] Последняя дата решения: %s\n[ ] Номер задачи: %s\n", task.Date, task.TaskNum)
@@ -25,7 +34,6 @@ func ProcessUserInput(f *excelize.File, sheetName string, task Task, neededTasks
 		}
 
 		if input == "1" {
-			// Обновить дату и статус задачи
 			today := time.Now().Format("02-01-06")
 			updateExcelCell(f, sheetName, fmt.Sprintf("A%d", task.RowNumber), today)     // обновляем дату на сегодняшную
 			updateExcelCell(f, sheetName, fmt.Sprintf("C%d", task.RowNumber), "0")       // обнуляем счетчик решения с подсказкой
@@ -40,10 +48,8 @@ func ProcessUserInput(f *excelize.File, sheetName string, task Task, neededTasks
 			continue
 		}
 
-		// Удаляем обработанную задачу из списка
 		neededTasks = removeTask(neededTasks, task)
 
-		// Проверяем, остались ли задачи в списке
 		if len(neededTasks) == 0 {
 			fmt.Println("Нет задач, удовлетворяющих условиям.")
 			return

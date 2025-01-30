@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ func main() {
 	fmt.Println("Введите значение: ")
 	fmt.Println("1 - для получения случайной задачи")
 	fmt.Println("2 - для получения нерешенной случайной задачи")
+	fmt.Println("3 - для добавления новой задачи")
 	fmt.Println("q - для выхода из программы")
 
 	reader := bufio.NewReader(os.Stdin)
@@ -27,11 +29,16 @@ func main() {
 	}
 
 	if input == "1" {
-		// Получаем задачи, удовлетворяющие условиям
 		neededTasks := getNeededTasks(f, sheetName, time.Now(), 1)
+		randomTask := pickRandomTask(neededTasks)
+		ProcessUserInput(f, sheetName, randomTask, neededTasks)
+	}
+
+	if input == "2" {
+		neededTasks := getNeededTasks(f, sheetName, time.Now(), 0)
 
 		if len(neededTasks) == 0 {
-			fmt.Println("Нет ячеек, удовлетворяющих условиям")
+			fmt.Println("Нет ячеек, удовлетворяющих условиям. Все задачи решены самостоятельно.")
 			return
 		}
 
@@ -39,16 +46,26 @@ func main() {
 		ProcessUserInput(f, sheetName, randomTask, neededTasks)
 	}
 
-	if input == "2" {
-		// Получаем задачи, удовлетворяющие условиям
-		neededTasks := getNeededTasks(f, sheetName, time.Now(), 0)
+	if input == "3" {
+		var newTask Task
+		today := time.Now().Format("02-01-06")
+		newTask.Date = today
 
-		if len(neededTasks) == 0 {
-			fmt.Println("Нет ячеек, удовлетворяющих условиям")
-			return
+		fmt.Println("Введите номер задачи: ")
+		fmt.Scan(&newTask.TaskNum)
+
+		fmt.Println("Введите сложность задачи: ")
+		fmt.Scan(&newTask.Difficulty)
+
+		newTask.IsSolved = "0"
+		newTask.countSolved = "1"
+
+		rows, err := f.GetRows(sheetName)
+		if err != nil {
+			log.Fatalf("Ошибка получения строк: %v", err)
 		}
 
-		randomTask := pickRandomTask(neededTasks)
-		ProcessUserInput(f, sheetName, randomTask, neededTasks)
+		newTask.RowNumber = len(rows) + 1
+		addNewRow(f, sheetName, newTask)
 	}
 }
