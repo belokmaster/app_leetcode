@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -48,33 +47,10 @@ func main() {
 	}
 
 	if input == "3" {
-		var newTask Task
-		today := time.Now().Format("02-01-06")
-		newTask.Date = today
-
-		fmt.Println("Введите номер задачи: ")
-		fmt.Scan(&newTask.TaskNum)
-
-		fmt.Println("Введите сложность задачи: ")
-		fmt.Scan(&newTask.Difficulty)
-
-		newTask.IsSolved = "0"
-		newTask.countSolved = "1"
-
-		rows, err := f.GetRows(sheetName)
-		if err != nil {
-			log.Fatalf("Ошибка получения строк: %v", err)
-		}
-
-		newTask.RowNumber = len(rows) + 1
-		addNewRow(f, sheetName, newTask)
+		ProcessNewTaskInput(f, sheetName)
 	}
 
 	if input == "4" {
-		numTask := ""
-		fmt.Println("Введите номер задачи: ")
-		fmt.Scan(&numTask)
-
-		changeTaskStatus(f, sheetName, numTask)
+		ProcessOldTaskChangeInput(f, sheetName)
 	}
 }

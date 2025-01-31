@@ -5,46 +5,72 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/xuri/excelize/v2"
 )
 
-/*
-func ProcessNewTaskInput(f *excelize.File, sheetName string) {
+func ProcessOldTaskChangeInput(f *excelize.File, sheetName string) {
+	for {
+		fmt.Println("Хотите ли вы изменить данные решенной задачи? (1 - да, q - выход):")
+		input := ""
+		fmt.Scan(&input)
 
-}*/
+		if input == "q" {
+			fmt.Println("Выход из программы.")
+			return
+		}
 
-func addNewRow(f *excelize.File, sheetName string, newTask Task) {
-	updateExcelCell(f, sheetName, fmt.Sprintf("A%d", newTask.RowNumber), newTask.Date)
-	updateExcelCell(f, sheetName, fmt.Sprintf("B%d", newTask.RowNumber), newTask.TaskNum)
-	updateExcelCell(f, sheetName, fmt.Sprintf("C%d", newTask.RowNumber), newTask.IsSolved)
-	updateExcelCell(f, sheetName, fmt.Sprintf("D%d", newTask.RowNumber), newTask.Difficulty)
-	updateExcelCell(f, sheetName, fmt.Sprintf("E%d", newTask.RowNumber), newTask.countSolved)
-	saveExcelFile(f, "example.xlsx")
+		if input == "1" {
+			numTask := ""
+			fmt.Println("Введите номер задачи: ")
+			fmt.Scan(&numTask)
+			changeTaskStatus(f, sheetName, numTask)
+		} else {
+			fmt.Println("Некорректный ввод. Пожалуйста, введите 1 или q для выхода.")
+			continue
+		}
+	}
 }
 
-func changeTaskStatus(f *excelize.File, sheetName, numTask string) {
-	task, err := findTaskByNumber(f, sheetName, numTask)
-	if err != nil {
-		log.Fatalf("Ошибка при обработке задачи. Перепроверьте ввод.")
+func ProcessNewTaskInput(f *excelize.File, sheetName string) {
+	for {
+		fmt.Println("Хотите ли вы добавить новую задачу? (1 - да, q - выход):")
+		input := ""
+		fmt.Scan(&input)
+
+		if input == "q" {
+			fmt.Println("Выход из программы.")
+			return
+		}
+
+		if input == "1" {
+			var newTask Task
+			today := time.Now().Format("02-01-06")
+			newTask.Date = today
+
+			fmt.Println("Введите номер задачи: ")
+			fmt.Scan(&newTask.TaskNum)
+
+			fmt.Println("Введите сложность задачи: ")
+			fmt.Scan(&newTask.Difficulty)
+
+			newTask.IsSolved = "0"
+			newTask.countSolved = "1"
+
+			rows, err := f.GetRows(sheetName)
+			if err != nil {
+				log.Fatalf("Ошибка получения строк: %v", err)
+			}
+
+			newTask.RowNumber = len(rows) + 1
+			addNewRow(f, sheetName, newTask)
+		} else {
+			fmt.Println("Некорректный ввод. Пожалуйста, введите 1 или q для выхода.")
+			continue
+		}
 	}
-
-	today := time.Now().Format("02-01-06")
-	updateExcelCell(f, sheetName, fmt.Sprintf("A%d", task.RowNumber), today)     // обновляем дату на сегодняшную
-	updateExcelCellCountSolved(f, sheetName, fmt.Sprintf("E%d", task.RowNumber)) //+= 1 решений
-	fmt.Printf("Задача %s была обновлена.\n", numTask)
-
-	newCountSolved, err := strconv.Atoi(task.countSolved)
-	if err != nil {
-		fmt.Println("Ошибка при преобразовании строки в число:", err)
-		return
-	}
-
-	fmt.Printf("Общее количество решений данной задачи: %d", newCountSolved+1)
-	saveExcelFile(f, "example.xlsx")
 }
 
 func ProcessUserInput(f *excelize.File, sheetName string, task Task, neededTasks []Task) {
@@ -85,13 +111,4 @@ func ProcessUserInput(f *excelize.File, sheetName string, task Task, neededTasks
 
 		task = pickRandomTask(neededTasks)
 	}
-}
-
-func removeTask(tasks []Task, task Task) []Task {
-	for i, t := range tasks {
-		if t.RowNumber == task.RowNumber {
-			return append(tasks[:i], tasks[i+1:]...)
-		}
-	}
-	return tasks
 }
