@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -15,6 +16,30 @@ type Task struct {
 	IsSolved    string
 	Difficulty  string
 	countSolved string
+}
+
+func findTaskByNumber(f *excelize.File, sheetName string, taskNum string) (Task, error) {
+	rows, err := f.GetRows(sheetName)
+	if err != nil {
+		return Task{}, fmt.Errorf("ошибка при получении строк: %v", err)
+	}
+
+	for rowIndex, row := range rows {
+		if len(row) == 5 {
+			if row[1] == taskNum {
+				return Task{
+					RowNumber:   rowIndex + 1,
+					Date:        row[0],
+					TaskNum:     row[1],
+					IsSolved:    row[2],
+					Difficulty:  row[3],
+					countSolved: row[4],
+				}, nil
+			}
+		}
+	}
+
+	return Task{}, fmt.Errorf("задача с номером %s не найдена", taskNum)
 }
 
 func getNeededTasks(f *excelize.File, sheetName string, now time.Time, taskInd int) []Task {

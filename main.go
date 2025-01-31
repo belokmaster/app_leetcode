@@ -14,10 +14,11 @@ func main() {
 	defer closeExcelFile(f)
 
 	fmt.Println("Введите значение: ")
-	fmt.Println("1 - для получения случайной задачи")
-	fmt.Println("2 - для получения нерешенной случайной задачи")
-	fmt.Println("3 - для добавления новой задачи")
-	fmt.Println("q - для выхода из программы")
+	fmt.Println("1 - для получения случайной задачи;")
+	fmt.Println("2 - для получения нерешенной случайной задачи;")
+	fmt.Println("3 - для добавления новой задачи;")
+	fmt.Println("4 - для самостоятельного изменения статуса задачи;")
+	fmt.Println("q - для выхода из программы.")
 
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
@@ -67,5 +68,13 @@ func main() {
 
 		newTask.RowNumber = len(rows) + 1
 		addNewRow(f, sheetName, newTask)
+	}
+
+	if input == "4" {
+		numTask := ""
+		fmt.Println("Введите номер задачи: ")
+		fmt.Scan(&numTask)
+
+		changeTaskStatus(f, sheetName, numTask)
 	}
 }
