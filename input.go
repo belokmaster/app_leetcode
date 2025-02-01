@@ -46,17 +46,28 @@ func ProcessNewTaskInput(f *excelize.File, sheetName string) {
 		}
 
 		if input == "1" {
+			fmt.Println("Введите номер задачи: ")
+			var numTask string
+			fmt.Scan(&numTask)
+
+			_, err := findTaskByNumber(f, sheetName, numTask)
+			if err == nil {
+				fmt.Println("Данная задача уже существует. Обновляем информацию.")
+				changeTaskStatus(f, sheetName, numTask)
+				return
+			}
+
 			var newTask Task
+			newTask.TaskNum = numTask
 			today := time.Now().Format("02-01-06")
 			newTask.Date = today
-
-			fmt.Println("Введите номер задачи: ")
-			fmt.Scan(&newTask.TaskNum)
 
 			fmt.Println("Введите сложность задачи: ")
 			fmt.Scan(&newTask.Difficulty)
 
-			newTask.IsSolved = "0"
+			fmt.Println("Решили ли вы задачу без подсказок? (0 - да, 1 - нет): ")
+			fmt.Scan(&newTask.IsSolved)
+
 			newTask.countSolved = "1"
 
 			rows, err := f.GetRows(sheetName)
@@ -65,6 +76,7 @@ func ProcessNewTaskInput(f *excelize.File, sheetName string) {
 			}
 
 			newTask.RowNumber = len(rows) + 1
+			fmt.Printf("Задача %s успешно добавлена.\n", numTask)
 			addNewRow(f, sheetName, newTask)
 		} else {
 			fmt.Println("Некорректный ввод. Пожалуйста, введите 1 или q для выхода.")
