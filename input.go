@@ -26,6 +26,12 @@ func ProcessOldTaskChangeInput(f *excelize.File, sheetName string) {
 			numTask := ""
 			fmt.Println("Введите номер задачи: ")
 			fmt.Scan(&numTask)
+
+			_, err := findTaskByNumber(f, sheetName, numTask)
+			if err != nil {
+				fmt.Println("Данная задача не существует.")
+			}
+
 			changeTaskStatus(f, sheetName, numTask)
 		} else {
 			fmt.Println("Некорректный ввод. Пожалуйста, введите 1 или q для выхода.")
