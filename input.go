@@ -11,6 +11,15 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+func outputStartMessage() {
+	fmt.Println("\nВведите значение:")
+	fmt.Println("1 - для получения случайной задачи;")
+	fmt.Println("2 - для получения нерешенной случайной задачи;")
+	fmt.Println("3 - для добавления новой задачи;")
+	fmt.Println("4 - для самостоятельного изменения статуса задачи;")
+	fmt.Println("q - для выхода из программы.")
+}
+
 func ProcessOldTaskChangeInput(f *excelize.File, sheetName string) {
 	for {
 		fmt.Println("Хотите ли вы изменить данные решенной задачи? (1 - да, q - выход):")
@@ -30,6 +39,7 @@ func ProcessOldTaskChangeInput(f *excelize.File, sheetName string) {
 			_, err := findTaskByNumber(f, sheetName, numTask)
 			if err != nil {
 				fmt.Println("Данная задача не существует.")
+				return
 			}
 
 			changeTaskStatus(f, sheetName, numTask)
@@ -60,7 +70,7 @@ func ProcessNewTaskInput(f *excelize.File, sheetName string) {
 			if err == nil {
 				fmt.Println("Данная задача уже существует. Обновляем информацию.")
 				changeTaskStatus(f, sheetName, numTask)
-				return
+				continue
 			}
 
 			var newTask Task
