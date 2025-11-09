@@ -2,6 +2,7 @@ package main
 
 import (
 	"leetcodeapp/internal/database"
+	"leetcodeapp/internal/handlers"
 	"log"
 	"net/http"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func main() {
-	path := "text.txt"
+	path := "config.json"
 	db, err := database.InitDB(path)
 	if err != nil {
 		log.Fatalf("problem with init db: %v", err)
@@ -19,6 +20,8 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "web/templates/index.html")
 	})
+	http.HandleFunc("/tasks", handlers.AddTaskHandler(db))
+	http.HandleFunc("/api/tasks", handlers.GetTasksHandler(db))
 
 	log.Println("Server started at http://localhost:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

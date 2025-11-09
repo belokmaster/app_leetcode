@@ -2,6 +2,8 @@
 *.txt
 *.xlsx
 *.bin
+*.json
+
 app
 leetcode_ap
 app_leetcode
