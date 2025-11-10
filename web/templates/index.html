@@ -13,14 +13,38 @@
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
+            position: relative;
         }
 
         .task-number {
             font-weight: bold;
+            margin-right: 30px;
         }
 
         .task-desc {
             color: #666;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            background: #cc0000;
         }
     </style>
 </head>
@@ -72,6 +96,7 @@
     </div>
 
     <script>
+        // Функция загрузки задач
         async function loadTasks() {
             try {
                 const response = await fetch('/api/tasks');
@@ -84,17 +109,49 @@
                 }
 
                 container.innerHTML = tasks.map(task => `
-                <div class="task-item">
-                    <div class="task-number">Задача #${task.number}</div>
-                    <div class="task-desc">${task.description}</div>
-                    <div>Сложность: ${task.platform_difficult}/3 | Моя: ${task.my_difficult}/10</div>
-                    <div>${task.solved_with_hint ? 'С подсказкой' : 'Самостоятельно'} | 
-                        ${task.is_masthaved ? 'Освоено' : 'Не освоено'}</div>
-                    <small>Создано: ${new Date(task.created_at).toLocaleDateString()}</small>
-                </div>
-            `).join('');
+                    <div class="task-item" id="task-${task.id}">
+                        <button class="delete-btn" onclick="deleteTask(${task.id})">×</button>
+                        <div class="task-number">Задача #${task.number}</div>
+                        <div class="task-desc">${task.description}</div>
+                        <div>Сложность: ${task.platform_difficult}/3 | Моя: ${task.my_difficult}/10</div>
+                        <div>${task.solved_with_hint ? 'С подсказкой' : 'Самостоятельно'} | 
+                            ${task.is_masthaved ? 'Освоено' : 'Не освоено'}</div>
+                        <small>Создано: ${new Date(task.created_at).toLocaleDateString()}</small>
+                    </div>
+                `).join('');
             } catch (error) {
                 document.getElementById('tasks-container').innerHTML = 'Ошибка загрузки';
+            }
+        }
+
+        // Функция удаления задачи
+        async function deleteTask(id) {
+            if (!confirm('Удалить задачу?')) {
+                return;
+            }
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('id', id.toString());
+
+                const response = await fetch('/tasks/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const taskElement = document.getElementById(`task-${id}`);
+                    if (taskElement) {
+                        taskElement.remove();
+                    }
+                } else {
+                    alert('Ошибка удаления');
+                }
+            } catch (error) {
+                alert('Ошибка сети');
             }
         }
 

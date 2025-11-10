@@ -10,19 +10,22 @@ import (
 )
 
 func AddTaskHandler(db *sql.DB) http.HandlerFunc {
-	log.Printf("start working AddTaskHandler")
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("AddTaskHandler: start working")
+
 		if r.Method != "POST" {
-			http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
+			log.Printf("AddTaskHandler: problem with method in http")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
 		if err := r.ParseForm(); err != nil {
+			log.Printf("AddTaskHandler: problem with parsing the form")
 			http.Error(w, "Can't parse form: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		log.Printf("Form data: %+v", r.Form)
+		log.Printf("AddTaskHandler: Form data: %+v", r.Form)
 
 		task := database.Task{
 			Number:            parseInt(r.FormValue("number")),
@@ -33,21 +36,23 @@ func AddTaskHandler(db *sql.DB) http.HandlerFunc {
 			IsMasthaved:       r.FormValue("is_masthaved") == "on",
 		}
 
-		log.Printf("Task to insert: %+v", task)
+		log.Printf("AddTaskHandler: Task to insert: %+v", task)
 
 		err := database.AddTask(db, task)
 		if err != nil {
+			log.Printf("AddTaskHandler: problem with add task to db: %v", err)
 			http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		log.Printf("Task inserted successfully")
+		log.Printf("AddTaskHandler: task inserted successfully")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
 func parseInt(s string) int {
 	val, _ := strconv.Atoi(s)
+	// уж надеюсь в атои не будет еррора..
 	return val
 }
 
@@ -64,7 +69,42 @@ func GetTasksHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		log.Printf("GetTasksHandler: returning %d tasks", len(tasks))
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(tasks)
+	}
+}
+
+func DeleteTaskHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("DeleteTaskHandler: start working")
+
+		if r.Method != "POST" {
+			log.Printf("DeleteTaskHandler: problem with method in http")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			log.Printf("DeleteTaskHandler: problem with parsing the form")
+			http.Error(w, "Can't parse form: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		log.Printf("DeleteTaskHandler: form data: %+v", r.Form)
+
+		id := parseInt(r.FormValue("id"))
+		log.Printf("DeleteTaskHandler: deleting task ID: %d", id)
+
+		err := database.DeleteTask(db, id)
+		if err != nil {
+			log.Printf("DeleteTaskHandler: delete failed: %v", err)
+			http.Error(w, "Delete error: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		log.Printf("DeleteTaskHandler: task %d deleted successfully", id)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }

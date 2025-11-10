@@ -65,6 +65,7 @@ func AddTask(db *sql.DB, task Task) error {
 		task.SolvedWithHint,
 		task.IsMasthaved,
 	)
+
 	return err
 }
 
@@ -117,4 +118,24 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 	}
 
 	return tasks, rows.Err()
+}
+
+func DeleteTask(db *sql.DB, id int) error {
+	query := `DELETE FROM tasks WHERE id = $1`
+	result, err := db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("error retrieving task ID during delete operation: %v", err)
+	}
+
+	// проверка что строка действительно удалилась
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("get rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("task with id %d not found", id)
+	}
+
+	return nil
 }
