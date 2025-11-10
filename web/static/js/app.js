@@ -11,8 +11,8 @@ async function loadTasks() {
         }
 
         container.innerHTML = tasks.map(task => `
-            <div class="task-item" id="task-${task.id}">
-                <button class="delete-btn" onclick="deleteTask(${task.id})">×</button>
+            <div class="task-item" id="task-${task.id}" onclick="openEditModal(${JSON.stringify(task).replace(/"/g, '&quot;')})">
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteTask(${task.id})">×</button>
                 <div class="task-number">Задача #${task.number}</div>
                 <div class="task-desc">${task.description}</div>
                 
@@ -27,7 +27,10 @@ async function loadTasks() {
                     </span>
                 </div>
                 
-                <div class="task-date">Создано: ${new Date(task.created_at).toLocaleDateString('ru-RU')}</div>
+                <div class="task-date">
+                    Создано: ${new Date(task.created_at).toLocaleDateString('ru-RU')}
+                    ${task.solved_at ? ` | Решено: ${new Date(task.solved_at).toLocaleDateString('ru-RU')}` : ''}
+                </div>
             </div>
         `).join('');
     } catch (error) {
@@ -78,4 +81,134 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('form').addEventListener('submit', function () {
         setTimeout(loadTasks, 1000);
     });
+
+    // Добавляем обработчик поиска
+    document.getElementById('search-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id = parseInt(this.search_id.value);
+        if (id > 0) {
+            searchTaskById(id);
+        }
+    });
+
+    // Закрытие модального окна
+    document.querySelector('.close').addEventListener('click', closeEditModal);
+    document.getElementById('edit-form').addEventListener('submit', handleEditFormSubmit);
+
+    // Закрытие по клику вне модального окна
+    window.addEventListener('click', function (e) {
+        const modal = document.getElementById('edit-modal');
+        if (e.target === modal) {
+            closeEditModal();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        const modal = document.getElementById('edit-modal');
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            closeEditModal();
+        }
+    });
 });
+
+// Функция поиска задачи по ID
+async function searchTaskById(id) {
+    try {
+        const response = await fetch(`/api/task?id=${id}`);
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        const resultsContainer = document.getElementById('search-results');
+        resultsContainer.innerHTML = `
+            <div class="search-result-item task-item" onclick="openEditModal(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                <div class="task-number">Задача #${data.number}</div>
+                <div class="task-desc">${data.description}</div>
+                <div class="task-meta">
+                    <span class="difficulty">Сложность: ${data.platform_difficult}/3</span>
+                    <span class="difficulty">Моя: ${data.my_difficult}/10</span>
+                    <span class="status ${data.solved_with_hint ? 'solved-hint' : 'solved-alone'}">
+                        ${data.solved_with_hint ? 'С подсказкой' : 'Самостоятельно'}
+                    </span>
+                    <span class="status ${data.is_masthaved ? 'mastered' : 'not-mastered'}">
+                        ${data.is_masthaved ? 'Освоено' : 'Не освоено'}
+                    </span>
+                </div>
+                <div class="task-date">
+                    Создано: ${new Date(data.created_at).toLocaleDateString('ru-RU')}
+                    ${data.solved_at ? ` | Решено: ${new Date(data.solved_at).toLocaleDateString('ru-RU')}` : ''}
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        document.getElementById('search-results').innerHTML =
+            `<div style="color: #e74c3c; text-align: center;">${error.message}</div>`;
+    }
+}
+
+// Открытие модального окна при клике на задачу
+function openEditModal(task) {
+    const modal = document.getElementById('edit-modal');
+    const form = document.getElementById('edit-form');
+
+    // Заполняем форму данными задачи
+    document.getElementById('edit-id').value = task.id;
+    document.getElementById('edit-number').value = task.number;
+    document.getElementById('edit-platform-difficult').value = task.platform_difficult;
+    document.getElementById('edit-my-difficult').value = task.my_difficult;
+    document.getElementById('edit-description').value = task.description;
+    document.getElementById('edit-solved-with-hint').checked = task.solved_with_hint;
+    document.getElementById('edit-is-masthaved').checked = task.is_masthaved;
+
+    // Форматируем дату для input[type="date"]
+    if (task.solved_at) {
+        const solvedDate = new Date(task.solved_at);
+        document.getElementById('edit-solved-at').value = solvedDate.toISOString().split('T')[0];
+    } else {
+        document.getElementById('edit-solved-at').value = '';
+    }
+
+    modal.style.display = 'block';
+}
+
+// Закрытие модального окна
+function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+}
+
+// Обработчик отправки формы редактирования
+async function handleEditFormSubmit(e) {
+    e.preventDefault();
+
+    const formData = new URLSearchParams();
+    formData.append('id', document.getElementById('edit-id').value);
+    formData.append('platform_difficult', document.getElementById('edit-platform-difficult').value);
+    formData.append('my_difficult', document.getElementById('edit-my-difficult').value);
+    formData.append('description', document.getElementById('edit-description').value);
+    formData.append('solved_at', document.getElementById('edit-solved-at').value);
+    formData.append('solved_with_hint', document.getElementById('edit-solved-with-hint').checked ? 'on' : '');
+    formData.append('is_masthaved', document.getElementById('edit-is-masthaved').checked ? 'on' : '');
+
+    try {
+        const response = await fetch('/api/tasks/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+
+        if (response.ok) {
+            closeEditModal();
+            loadTasks();
+            alert('Задача обновлена!');
+            location.reload()
+        } else {
+            alert('Ошибка обновления задачи');
+        }
+    } catch (error) {
+        alert('Ошибка сети');
+    }
+}

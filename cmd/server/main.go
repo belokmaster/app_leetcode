@@ -26,6 +26,8 @@ func main() {
 	http.HandleFunc("/tasks", handlers.AddTaskHandler(db))
 	http.HandleFunc("/api/tasks", handlers.GetTasksHandler(db))
 	http.HandleFunc("/tasks/delete", handlers.DeleteTaskHandler(db))
+	http.HandleFunc("/api/task", handlers.GetTaskByNumberHandler(db))
+	http.HandleFunc("/api/tasks/update", handlers.UpdateTaskHandler(db))
 
 	log.Println("Server started at http://localhost:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

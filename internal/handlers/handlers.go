@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func AddTaskHandler(db *sql.DB) http.HandlerFunc {
@@ -106,5 +107,91 @@ func DeleteTaskHandler(db *sql.DB) http.HandlerFunc {
 
 		log.Printf("DeleteTaskHandler: task %d deleted successfully", id)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
+
+func GetTaskByNumberHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("GetTaskByIDHandler: start working")
+		if r.Method != "GET" {
+			log.Printf("GetTaskByIDHandler: problem with method in http")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		idStr := r.URL.Query().Get("id")
+		log.Printf("GetTaskByIDHandler: ID from query: '%s'", idStr)
+
+		id, err := strconv.Atoi(idStr)
+		if err != nil || id <= 0 {
+			http.Error(w, "Invalid task ID", http.StatusBadRequest)
+			return
+		}
+
+		log.Printf("GetTaskByIDHandler: task ID: %d", id)
+
+		task, err := database.FindTaskByNumber(db, id)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "Task not found", http.StatusNotFound)
+			} else {
+				http.Error(w, "Database error", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(task)
+	}
+}
+
+func UpdateTaskHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("UpdateTaskHandler: start working")
+
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			log.Printf("UpdateTaskHandler: parse form error: %v", err)
+			http.Error(w, "Can't parse form", http.StatusBadRequest)
+			return
+		}
+
+		id := parseInt(r.FormValue("id"))
+		log.Printf("UpdateTaskHandler: updating task ID: %d", id)
+		log.Printf("UpdateTaskHandler: form data: %+v", r.Form)
+
+		task := database.Task{
+			ID:                id,
+			PlatformDifficult: parseInt(r.FormValue("platform_difficult")),
+			MyDifficult:       parseInt(r.FormValue("my_difficult")),
+			Description:       r.FormValue("description"),
+			SolvedWithHint:    r.FormValue("solved_with_hint") == "on",
+			IsMasthaved:       r.FormValue("is_masthaved") == "on",
+		}
+
+		// Обработка даты решения
+		if solvedAtStr := r.FormValue("solved_at"); solvedAtStr != "" {
+			log.Printf("UpdateTaskHandler: solved_at from form: %s", solvedAtStr)
+			if solvedAt, err := time.Parse("2006-01-02", solvedAtStr); err == nil {
+				task.SolvedAt = &solvedAt
+				log.Printf("UpdateTaskHandler: parsed solved_at: %v", solvedAt)
+			} else {
+				log.Printf("UpdateTaskHandler: solved_at parse error: %v", err)
+			}
+		}
+
+		err := database.UpdateTask(db, task)
+		if err != nil {
+			log.Printf("UpdateTaskHandler: database error: %v", err)
+			http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		log.Printf("UpdateTaskHandler: task %d updated successfully", id)
+		w.WriteHeader(http.StatusOK)
 	}
 }

@@ -54,8 +54,9 @@ func AddTask(db *sql.DB, task Task) error {
 		my_difficult, 
 		description, 
 		solved_with_hint, 
-		is_masthaved
-	) VALUES ($1, $2, $3, $4, $5, $6)`
+		is_masthaved,
+		solved_at 
+	) VALUES ($1, $2, $3, $4, $5, $6, NOW())`
 
 	_, err := db.Exec(query,
 		task.Number,
@@ -138,4 +139,61 @@ func DeleteTask(db *sql.DB, id int) error {
 	}
 
 	return nil
+}
+
+func FindTaskByNumber(db *sql.DB, number int) (*Task, error) {
+	query := `SELECT 
+		id,
+		number, 
+		created_at, 
+		solved_at, 
+		platform_difficult, 
+		my_difficult, 
+		solved_with_hint, 
+		description, 
+		is_masthaved 
+	FROM tasks 
+	WHERE number = $1`
+
+	var task Task
+	var solvedAt sql.NullTime
+
+	err := db.QueryRow(query, number).Scan(
+		&task.ID, &task.Number, &task.CreatedAt, &solvedAt,
+		&task.PlatformDifficult, &task.MyDifficult, &task.SolvedWithHint,
+		&task.Description, &task.IsMasthaved,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if solvedAt.Valid {
+		task.SolvedAt = &solvedAt.Time
+	}
+
+	return &task, nil
+}
+
+func UpdateTask(db *sql.DB, task Task) error {
+	query := `UPDATE tasks SET 
+		platform_difficult = $1,
+		my_difficult = $2,
+		description = $3,
+		solved_with_hint = $4,
+		is_masthaved = $5,
+		solved_at = $6
+	WHERE id = $7`
+
+	_, err := db.Exec(query,
+		task.PlatformDifficult,
+		task.MyDifficult,
+		task.Description,
+		task.SolvedWithHint,
+		task.IsMasthaved,
+		task.SolvedAt,
+		task.ID,
+	)
+
+	return err
 }
