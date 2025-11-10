@@ -124,6 +124,7 @@ func GetTaskByNumberHandler(db *sql.DB) http.HandlerFunc {
 
 		id, err := strconv.Atoi(idStr)
 		if err != nil || id <= 0 {
+			log.Printf("GetTaskByIDHandler: invalid ID task")
 			http.Error(w, "Invalid task ID", http.StatusBadRequest)
 			return
 		}
@@ -150,6 +151,7 @@ func UpdateTaskHandler(db *sql.DB) http.HandlerFunc {
 		log.Printf("UpdateTaskHandler: start working")
 
 		if r.Method != "POST" {
+			log.Printf("UpdateTaskHandler: problem with method in http")
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
@@ -193,5 +195,37 @@ func UpdateTaskHandler(db *sql.DB) http.HandlerFunc {
 
 		log.Printf("UpdateTaskHandler: task %d updated successfully", id)
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func GetRandomOldTaskHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("GetRandomOldTaskHandler: start working")
+		if r.Method != "GET" {
+			log.Printf("GetRandomOldTaskHandler: problem with method in http")
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		oldTasks, err := database.GetRandomTasks(db)
+		if err != nil {
+			http.Error(w, "Database error with getting tasks", http.StatusInternalServerError)
+			return
+		}
+
+		randomTask, err := database.GetRandomTaskFromSlice(oldTasks)
+		if err != nil {
+			http.Error(w, "Database error with getting task from tasks's slices", http.StatusInternalServerError)
+			return
+		}
+
+		if randomTask.ID == 0 {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"error": "Нет задач старше 2 недель"})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(randomTask)
 	}
 }

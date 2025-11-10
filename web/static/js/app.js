@@ -212,3 +212,41 @@ async function handleEditFormSubmit(e) {
         alert('Ошибка сети');
     }
 }
+
+async function getRandomOldTask() {
+    try {
+        const response = await fetch('/api/tasks/random-old');
+        const data = await response.json();
+
+        const resultContainer = document.getElementById('random-task-result');
+
+        if (data.error) {
+            resultContainer.innerHTML = `<div style="color: #e74c3c; text-align: center;">${data.error}</div>`;
+            return;
+        }
+
+        resultContainer.innerHTML = `
+            <div class="random-task-item" onclick="openEditModal(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                <div class="task-number">Задача #${data.number}</div>
+                <div class="task-desc">${data.description}</div>
+                <div class="task-meta">
+                    <span class="difficulty">Сложность: ${data.platform_difficult}/3</span>
+                    <span class="difficulty">Моя: ${data.my_difficult}/10</span>
+                    <span class="status ${data.solved_with_hint ? 'solved-hint' : 'solved-alone'}">
+                        ${data.solved_with_hint ? 'С подсказкой' : 'Самостоятельно'}
+                    </span>
+                    <span class="status ${data.is_masthaved ? 'mastered' : 'not-mastered'}">
+                        ${data.is_masthaved ? 'Освоено' : 'Не освоено'}
+                    </span>
+                </div>
+                <div class="task-date">
+                    Создано: ${new Date(data.created_at).toLocaleDateString('ru-RU')}
+                    ${data.solved_at ? ` | Решено: ${new Date(data.solved_at).toLocaleDateString('ru-RU')}` : ''}
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        document.getElementById('random-task-result').innerHTML =
+            `<div style="color: #e74c3c; text-align: center;">Ошибка загрузки</div>`;
+    }
+}

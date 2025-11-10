@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"leetcodeapp/internal/config"
+	"math/rand"
+	"time"
 )
 
 func InitDB(path string) (*sql.DB, error) {
@@ -196,4 +198,67 @@ func UpdateTask(db *sql.DB, task Task) error {
 	)
 
 	return err
+}
+
+func GetRandomTasks(db *sql.DB) ([]Task, error) {
+	query := `SELECT 
+		id,
+		number, 
+		created_at, 
+		solved_at, 
+		platform_difficult, 
+		my_difficult, 
+		solved_with_hint, 
+		description, 
+		is_masthaved 
+	FROM tasks 
+	WHERE solved_at < CURRENT_DATE - INTERVAL '2 weeks'
+	ORDER BY solved_at`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tasks []Task
+	for rows.Next() {
+		var task Task
+		var solvedAt sql.NullTime
+
+		err := rows.Scan(
+			&task.ID,
+			&task.Number,
+			&task.CreatedAt,
+			&solvedAt,
+			&task.PlatformDifficult,
+			&task.MyDifficult,
+			&task.SolvedWithHint,
+			&task.Description,
+			&task.IsMasthaved,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if solvedAt.Valid {
+			task.SolvedAt = &solvedAt.Time
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	return tasks, rows.Err()
+}
+
+func GetRandomTaskFromSlice(tasks []Task) (Task, error) {
+	if len(tasks) == 0 {
+		return Task{}, fmt.Errorf("no tasks available")
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	randomIndex := rand.Intn(len(tasks))
+
+	return tasks[randomIndex], nil
 }
