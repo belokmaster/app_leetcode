@@ -8,12 +8,20 @@ type Task struct {
 	CreatedAt         time.Time  `db:"created_at" json:"created_at"`
 	SolvedAt          *time.Time `db:"solved_at" json:"solved_at"`
 	PlatformDifficult int        `db:"platform_difficult" json:"platform_difficult"`
-	MyDifficult       int        `db:"my_difficult" json:"my_difficult"`
+	MyDifficult       Difficulty `db:"my_difficult" json:"my_difficult"`
 	SolvedWithHint    bool       `db:"solved_with_hint" json:"solved_with_hint"`
 	Description       string     `db:"description" json:"description"`
 	IsMasthaved       bool       `db:"is_masthaved" json:"is_masthaved"`
 	Labels            []Label    `db:"labels" json:"labels"`
 }
+
+type Difficulty int
+
+const (
+	Easy Difficulty = iota + 1
+	Medium
+	Hard
+)
 
 type Label int
 

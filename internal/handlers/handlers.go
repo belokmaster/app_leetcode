@@ -37,6 +37,11 @@ func parseInt(s string) int {
 	return val
 }
 
+func parseDifficulty(s string) database.Difficulty {
+	val, _ := strconv.Atoi(s)
+	return database.Difficulty(val)
+}
+
 func AddTaskHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("AddTaskHandler: start working")
@@ -58,7 +63,7 @@ func AddTaskHandler(db *sql.DB) http.HandlerFunc {
 		task := database.Task{
 			Number:            parseInt(r.FormValue("number")),
 			PlatformDifficult: parseInt(r.FormValue("platform_difficult")),
-			MyDifficult:       parseInt(r.FormValue("my_difficult")),
+			MyDifficult:       parseDifficulty(r.FormValue("my_difficult")),
 			Description:       r.FormValue("description"),
 			SolvedWithHint:    r.FormValue("solved_with_hint") == "on",
 			IsMasthaved:       r.FormValue("is_masthaved") == "on",
@@ -149,34 +154,38 @@ func DeleteTaskHandler(db *sql.DB) http.HandlerFunc {
 
 func GetTaskByNumberHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("GetTaskByIDHandler: start working")
+		log.Printf("GetTaskByNumberHandler: start working")
 		if r.Method != "GET" {
-			log.Printf("GetTaskByIDHandler: problem with method in http")
+			log.Printf("GetTaskByNumberHandler: problem with method in http")
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
 		numberStr := r.URL.Query().Get("number")
-		log.Printf("GetTaskByIDHandler: ID from query: '%s'", numberStr)
+		log.Printf("GetTaskByNumberHandler: number from query: '%s'", numberStr)
 
 		num, err := strconv.Atoi(numberStr)
 		if err != nil || num <= 0 {
-			log.Printf("GetTaskByIDHandler: invalid ID task")
-			http.Error(w, "Invalid task ID", http.StatusBadRequest)
+			log.Printf("GetTaskByNumberHandler: invalid number: %s", numberStr)
+			http.Error(w, "Invalid task number", http.StatusBadRequest)
 			return
 		}
 
-		log.Printf("GetTaskByIDHandler: task number: %d", num)
+		log.Printf("GetTaskByNumberHandler: searching for task number: %d", num)
 
 		task, err := database.FindTaskByNumber(db, num)
 		if err != nil {
 			if err == sql.ErrNoRows {
+				log.Printf("GetTaskByNumberHandler: task with number %d not found", num)
 				http.Error(w, "Task not found", http.StatusNotFound)
 			} else {
+				log.Printf("GetTaskByNumberHandler: database error: %v", err)
 				http.Error(w, "Database error", http.StatusInternalServerError)
 			}
 			return
 		}
+
+		log.Printf("GetTaskByNumberHandler: found task ID: %d, Number: %d", task.ID, task.Number)
 
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(task); err != nil {
@@ -216,7 +225,7 @@ func UpdateTaskHandler(db *sql.DB) http.HandlerFunc {
 		task := database.Task{
 			ID:                id,
 			PlatformDifficult: parseInt(r.FormValue("platform_difficult")),
-			MyDifficult:       parseInt(r.FormValue("my_difficult")),
+			MyDifficult:       parseDifficulty(r.FormValue("my_difficult")),
 			Description:       r.FormValue("description"),
 			SolvedWithHint:    r.FormValue("solved_with_hint") == "on",
 			IsMasthaved:       r.FormValue("is_masthaved") == "on",

@@ -85,14 +85,27 @@ button[type="submit"]:hover {
 
 .task-item {
     background: white;
-    border-left: 4px solid #3498db;
     padding: 20px;
     margin: 10px 0;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     position: relative;
     transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid #3498db;
 }
+
+.task-item.easy {
+    border-left-color: #27ae60;
+}
+
+.task-item.medium {
+    border-left-color: #f39c12;
+}
+
+.task-item.hard {
+    border-left-color: #e74c3c;
+}
+
 
 .task-item:hover {
     transform: translateY(-2px);
@@ -238,6 +251,18 @@ button[type="submit"]:hover {
     border-left: 4px solid #3498db;
 }
 
+.search-result-item.easy {
+    border-left-color: #27ae60;
+}
+
+.search-result-item.medium {
+    border-left-color: #f39c12;
+}
+
+.search-result-item.hard {
+    border-left-color: #e74c3c;
+}
+
 .modal {
     position: fixed;
     z-index: 1000;
@@ -271,16 +296,6 @@ button[type="submit"]:hover {
 
 .close:hover {
     color: #000;
-}
-
-.task-item {
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.task-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .search-result-item {
@@ -356,4 +371,16 @@ button[type="submit"]:hover {
     background: #fff;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.random-task-item.easy {
+    border-left-color: #27ae60;
+}
+
+.random-task-item.medium {
+    border-left-color: #f39c12;
+}
+
+.random-task-item.hard {
+    border-left-color: #e74c3c;
 }

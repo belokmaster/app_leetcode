@@ -11,7 +11,7 @@ async function loadTasks() {
         }
 
         container.innerHTML = tasks.map(task => `
-            <div class="task-item" id="task-${task.id}" onclick="openEditModal(${JSON.stringify(task).replace(/"/g, '&quot;')})">
+            <div class="task-item ${getDifficultyClass(task.platform_difficult)}" id="task-${task.id}" onclick="openEditModal(${JSON.stringify(task).replace(/"/g, '&quot;')})">
                 <button class="delete-btn" onclick="event.stopPropagation(); deleteTask(${task.id})">×</button>
                 <div class="task-number">Задача #${task.number}</div>
                 <div class="task-desc">${task.description}</div>
@@ -82,12 +82,13 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(loadTasks, 1000);
     });
 
-    // Добавляем обработчик поиска
+    // Исправленный обработчик поиска
     document.getElementById('search-form').addEventListener('submit', function (e) {
         e.preventDefault();
-        const id = parseInt(this.search_id.value);
-        if (id > 0) {
-            searchTaskById(id);
+        const numberInput = this.querySelector('input[name="search_number"]');
+        const number = parseInt(numberInput.value);
+        if (number > 0) {
+            searchTaskByNumber(number);
         }
     });
 
@@ -111,19 +112,29 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Функция поиска задачи по ID
-async function searchTaskById(id) {
-    try {
-        const response = await fetch(`/api/task?id=${id}`);
-        const data = await response.json();
+// Функция поиска задачи по номеру
+async function searchTaskByNumber(number) {
+    const resultsContainer = document.getElementById('search-results');
+    resultsContainer.innerHTML = '';
 
-        if (data.error) {
-            throw new Error(data.error);
+    try {
+        const response = await fetch(`/api/task?number=${number}`);
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                resultsContainer.innerHTML =
+                    `<div style="color: #7f8c8d; text-align: center;">Задача с номером ${number} не найдена.</div>`;
+            } else {
+                throw new Error(`Ошибка сервера: ${response.status}`);
+            }
+
+            return;
         }
 
-        const resultsContainer = document.getElementById('search-results');
+        const data = await response.json();
+
         resultsContainer.innerHTML = `
-            <div class="search-result-item task-item" onclick="openEditModal(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+            <div class="search-result-item task-item ${getDifficultyClass(data.platform_difficult)}" onclick="openEditModal(${JSON.stringify(data).replace(/"/g, '&quot;')})">
                 <div class="task-number">Задача #${data.number}</div>
                 <div class="task-desc">${data.description}</div>
                 <div class="task-meta">
@@ -143,8 +154,8 @@ async function searchTaskById(id) {
             </div>
         `;
     } catch (error) {
-        document.getElementById('search-results').innerHTML =
-            `<div style="color: #e74c3c; text-align: center;">${error.message}</div>`;
+        resultsContainer.innerHTML =
+            `<div style="color: #e74c3c; text-align: center;">Не удалось выполнить поиск. Проверьте соединение с сервером.</div>`;
     }
 }
 
@@ -162,7 +173,6 @@ function openEditModal(task) {
     document.getElementById('edit-solved-with-hint').checked = task.solved_with_hint;
     document.getElementById('edit-is-masthaved').checked = task.is_masthaved;
 
-    // Форматируем дату для input[type="date"]
     if (task.solved_at) {
         const solvedDate = new Date(task.solved_at);
         document.getElementById('edit-solved-at').value = solvedDate.toISOString().split('T')[0];
@@ -226,7 +236,7 @@ async function getRandomOldTask() {
         }
 
         resultContainer.innerHTML = `
-            <div class="random-task-item" onclick="openEditModal(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+            <div class="random-task-item task-item ${getDifficultyClass(data.platform_difficult)}" onclick="openEditModal(${JSON.stringify(data).replace(/"/g, '&quot;')})">
                 <div class="task-number">Задача #${data.number}</div>
                 <div class="task-desc">${data.description}</div>
                 <div class="task-meta">
@@ -248,5 +258,14 @@ async function getRandomOldTask() {
     } catch (error) {
         document.getElementById('random-task-result').innerHTML =
             `<div style="color: #e74c3c; text-align: center;">Ошибка загрузки</div>`;
+    }
+}
+
+function getDifficultyClass(difficulty) {
+    switch (difficulty) {
+        case 1: return 'easy';
+        case 2: return 'medium';
+        case 3: return 'hard';
+        default: return '';
     }
 }
