@@ -23,7 +23,7 @@ async function loadTasks() {
                         ${task.solved_with_hint ? 'С подсказкой' : 'Самостоятельно'}
                     </span>
                     <span class="status ${task.is_masthaved ? 'mastered' : 'not-mastered'}">
-                        ${task.is_masthaved ? 'Освоено' : 'Не освоено'}
+                        ${task.is_masthaved ? 'Нужная задача' : 'Ненужная задача'}
                     </span>
                 </div>
                 
@@ -133,7 +133,7 @@ async function searchTaskById(id) {
                         ${data.solved_with_hint ? 'С подсказкой' : 'Самостоятельно'}
                     </span>
                     <span class="status ${data.is_masthaved ? 'mastered' : 'not-mastered'}">
-                        ${data.is_masthaved ? 'Освоено' : 'Не освоено'}
+                        ${data.is_masthaved ? 'Нужная задача' : 'Ненужная задача'}
                     </span>
                 </div>
                 <div class="task-date">
@@ -236,7 +236,7 @@ async function getRandomOldTask() {
                         ${data.solved_with_hint ? 'С подсказкой' : 'Самостоятельно'}
                     </span>
                     <span class="status ${data.is_masthaved ? 'mastered' : 'not-mastered'}">
-                        ${data.is_masthaved ? 'Освоено' : 'Не освоено'}
+                        ${data.is_masthaved ? 'Нужная задача' : 'Ненужная задача'}
                     </span>
                 </div>
                 <div class="task-date">

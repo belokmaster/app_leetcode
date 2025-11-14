@@ -6,6 +6,8 @@ import (
 	"leetcodeapp/internal/config"
 	"math/rand"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 func InitDB(path string) (*sql.DB, error) {
@@ -42,14 +44,27 @@ func CreateTables(db *sql.DB) error {
 		my_difficult INTEGER, 
 		solved_with_hint BOOLEAN,
 		description TEXT,
-		is_masthaved BOOLEAN
+		is_masthaved BOOLEAN,
+		labels INTEGER[]
 	);`
 
 	_, err := db.Exec(query)
 	return err
 }
 
+func labelsToInt(intLabels []Label) []int {
+	labels := make([]int, len(intLabels))
+
+	for i, il := range intLabels {
+		labels[i] = int(il)
+	}
+
+	return labels
+}
+
 func AddTask(db *sql.DB, task Task) error {
+	intLabels := labelsToInt(task.Labels)
+
 	query := `INSERT INTO tasks (
 		number, 
 		platform_difficult, 
@@ -57,8 +72,9 @@ func AddTask(db *sql.DB, task Task) error {
 		description, 
 		solved_with_hint, 
 		is_masthaved,
-		solved_at 
-	) VALUES ($1, $2, $3, $4, $5, $6, NOW())`
+		solved_at,
+		labels
+	) VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)`
 
 	_, err := db.Exec(query,
 		task.Number,
@@ -67,6 +83,7 @@ func AddTask(db *sql.DB, task Task) error {
 		task.Description,
 		task.SolvedWithHint,
 		task.IsMasthaved,
+		pq.Array(intLabels),
 	)
 
 	return err
@@ -82,7 +99,8 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 		my_difficult, 
 		solved_with_hint, 
 		description, 
-		is_masthaved 
+		is_masthaved,
+		labels
 	FROM tasks 
 	ORDER BY created_at DESC`
 
@@ -96,6 +114,7 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 	for rows.Next() {
 		var task Task
 		var solvedAt sql.NullTime
+		var intLabels []int
 
 		err := rows.Scan(
 			&task.ID,
@@ -107,6 +126,7 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 			&task.SolvedWithHint,
 			&task.Description,
 			&task.IsMasthaved,
+			pq.Array(&intLabels),
 		)
 
 		if err != nil {
@@ -115,6 +135,11 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 
 		if solvedAt.Valid {
 			task.SolvedAt = &solvedAt.Time
+		}
+
+		task.Labels = make([]Label, len(intLabels))
+		for i, il := range intLabels {
+			task.Labels[i] = Label(il)
 		}
 
 		tasks = append(tasks, task)
@@ -153,17 +178,26 @@ func FindTaskByNumber(db *sql.DB, number int) (*Task, error) {
 		my_difficult, 
 		solved_with_hint, 
 		description, 
-		is_masthaved 
+		is_masthaved,
+		labels
 	FROM tasks 
 	WHERE number = $1`
 
 	var task Task
 	var solvedAt sql.NullTime
+	var intLabels []int
 
 	err := db.QueryRow(query, number).Scan(
-		&task.ID, &task.Number, &task.CreatedAt, &solvedAt,
-		&task.PlatformDifficult, &task.MyDifficult, &task.SolvedWithHint,
-		&task.Description, &task.IsMasthaved,
+		&task.ID,
+		&task.Number,
+		&task.CreatedAt,
+		&solvedAt,
+		&task.PlatformDifficult,
+		&task.MyDifficult,
+		&task.SolvedWithHint,
+		&task.Description,
+		&task.IsMasthaved,
+		pq.Array(&intLabels),
 	)
 
 	if err != nil {
@@ -172,6 +206,11 @@ func FindTaskByNumber(db *sql.DB, number int) (*Task, error) {
 
 	if solvedAt.Valid {
 		task.SolvedAt = &solvedAt.Time
+	}
+
+	task.Labels = make([]Label, len(intLabels))
+	for i, il := range intLabels {
+		task.Labels[i] = Label(il)
 	}
 
 	return &task, nil
@@ -184,8 +223,16 @@ func UpdateTask(db *sql.DB, task Task) error {
 		description = $3,
 		solved_with_hint = $4,
 		is_masthaved = $5,
-		solved_at = $6
-	WHERE id = $7`
+		solved_at = $6,
+		labels = $7
+	WHERE id = $8`
+
+	var solvedAt interface{}
+	if task.SolvedAt != nil {
+		solvedAt = *task.SolvedAt
+	} else {
+		solvedAt = nil
+	}
 
 	_, err := db.Exec(query,
 		task.PlatformDifficult,
@@ -193,7 +240,8 @@ func UpdateTask(db *sql.DB, task Task) error {
 		task.Description,
 		task.SolvedWithHint,
 		task.IsMasthaved,
-		task.SolvedAt,
+		solvedAt,
+		pq.Array(labelsToInt(task.Labels)),
 		task.ID,
 	)
 
@@ -210,7 +258,8 @@ func GetRandomTasks(db *sql.DB) ([]Task, error) {
 		my_difficult, 
 		solved_with_hint, 
 		description, 
-		is_masthaved 
+		is_masthaved,
+		labels 
 	FROM tasks 
 	WHERE solved_at < CURRENT_DATE - INTERVAL '2 weeks'
 	ORDER BY solved_at`
@@ -225,6 +274,7 @@ func GetRandomTasks(db *sql.DB) ([]Task, error) {
 	for rows.Next() {
 		var task Task
 		var solvedAt sql.NullTime
+		var intLabels []int
 
 		err := rows.Scan(
 			&task.ID,
@@ -236,6 +286,7 @@ func GetRandomTasks(db *sql.DB) ([]Task, error) {
 			&task.SolvedWithHint,
 			&task.Description,
 			&task.IsMasthaved,
+			pq.Array(&intLabels),
 		)
 
 		if err != nil {
@@ -244,6 +295,11 @@ func GetRandomTasks(db *sql.DB) ([]Task, error) {
 
 		if solvedAt.Valid {
 			task.SolvedAt = &solvedAt.Time
+		}
+
+		task.Labels = make([]Label, len(intLabels))
+		for i, il := range intLabels {
+			task.Labels[i] = Label(il)
 		}
 
 		tasks = append(tasks, task)

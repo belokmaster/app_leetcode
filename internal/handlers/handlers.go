@@ -7,8 +7,35 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
+
+func parseLabels(labelsStr string) []database.Label {
+	if labelsStr == "" {
+		return nil
+	}
+
+	labelStrs := strings.Split(labelsStr, ",")
+	labels := make([]database.Label, 0, len(labelStrs))
+
+	for _, labelStr := range labelStrs {
+		if labelStr == "" {
+			continue
+		}
+
+		labelVal := parseInt(strings.TrimSpace(labelStr))
+		labels = append(labels, database.Label(labelVal))
+	}
+
+	return labels
+}
+
+func parseInt(s string) int {
+	val, _ := strconv.Atoi(s)
+	// уж надеюсь в атои не будет еррора..
+	return val
+}
 
 func AddTaskHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +64,10 @@ func AddTaskHandler(db *sql.DB) http.HandlerFunc {
 			IsMasthaved:       r.FormValue("is_masthaved") == "on",
 		}
 
+		if labelsStr := r.FormValue("labels"); labelsStr != "" {
+			task.Labels = parseLabels(labelsStr)
+		}
+
 		log.Printf("AddTaskHandler: Task to insert: %+v", task)
 
 		err := database.AddTask(db, task)
@@ -51,21 +82,17 @@ func AddTaskHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func parseInt(s string) int {
-	val, _ := strconv.Atoi(s)
-	// уж надеюсь в атои не будет еррора..
-	return val
-}
-
 func GetTasksHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
+			log.Printf("GetTasksHandler: problem with method")
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
 		tasks, err := database.GetAllTasks(db)
 		if err != nil {
+			log.Printf("GetTasksHandler: database error: %v", err)
 			http.Error(w, "Database error with getting tasks", http.StatusInternalServerError)
 			return
 		}
@@ -73,7 +100,11 @@ func GetTasksHandler(db *sql.DB) http.HandlerFunc {
 		log.Printf("GetTasksHandler: returning %d tasks", len(tasks))
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(tasks)
+		if err := json.NewEncoder(w).Encode(tasks); err != nil {
+			log.Printf("GetTasksHandler: error encoding response: %v", err)
+			http.Error(w, "Error encoding response", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -96,6 +127,12 @@ func DeleteTaskHandler(db *sql.DB) http.HandlerFunc {
 		log.Printf("DeleteTaskHandler: form data: %+v", r.Form)
 
 		id := parseInt(r.FormValue("id"))
+		if id <= 0 {
+			log.Printf("DeleteTaskHandler: invalid ID: %d", id)
+			http.Error(w, "Invalid task ID", http.StatusBadRequest)
+			return
+		}
+
 		log.Printf("DeleteTaskHandler: deleting task ID: %d", id)
 
 		err := database.DeleteTask(db, id)
@@ -119,19 +156,19 @@ func GetTaskByNumberHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		idStr := r.URL.Query().Get("id")
-		log.Printf("GetTaskByIDHandler: ID from query: '%s'", idStr)
+		numberStr := r.URL.Query().Get("number")
+		log.Printf("GetTaskByIDHandler: ID from query: '%s'", numberStr)
 
-		id, err := strconv.Atoi(idStr)
-		if err != nil || id <= 0 {
+		num, err := strconv.Atoi(numberStr)
+		if err != nil || num <= 0 {
 			log.Printf("GetTaskByIDHandler: invalid ID task")
 			http.Error(w, "Invalid task ID", http.StatusBadRequest)
 			return
 		}
 
-		log.Printf("GetTaskByIDHandler: task ID: %d", id)
+		log.Printf("GetTaskByIDHandler: task number: %d", num)
 
-		task, err := database.FindTaskByNumber(db, id)
+		task, err := database.FindTaskByNumber(db, num)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "Task not found", http.StatusNotFound)
@@ -142,7 +179,11 @@ func GetTaskByNumberHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(task)
+		if err := json.NewEncoder(w).Encode(task); err != nil {
+			log.Printf("GetTaskByNumberHandler: error encoding response: %v", err)
+			http.Error(w, "Error encoding response", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -163,6 +204,12 @@ func UpdateTaskHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		id := parseInt(r.FormValue("id"))
+		if id <= 0 {
+			log.Printf("UpdateTaskHandler: invalid ID: %d", id)
+			http.Error(w, "Invalid task ID", http.StatusBadRequest)
+			return
+		}
+
 		log.Printf("UpdateTaskHandler: updating task ID: %d", id)
 		log.Printf("UpdateTaskHandler: form data: %+v", r.Form)
 
@@ -184,6 +231,10 @@ func UpdateTaskHandler(db *sql.DB) http.HandlerFunc {
 			} else {
 				log.Printf("UpdateTaskHandler: solved_at parse error: %v", err)
 			}
+		}
+
+		if labelsStr := r.FormValue("labels"); labelsStr != "" {
+			task.Labels = parseLabels(labelsStr)
 		}
 
 		err := database.UpdateTask(db, task)
@@ -209,12 +260,14 @@ func GetRandomOldTaskHandler(db *sql.DB) http.HandlerFunc {
 
 		oldTasks, err := database.GetRandomTasks(db)
 		if err != nil {
+			log.Printf("GetRandomOldTaskHandler: database error: %v", err)
 			http.Error(w, "Database error with getting tasks", http.StatusInternalServerError)
 			return
 		}
 
 		randomTask, err := database.GetRandomTaskFromSlice(oldTasks)
 		if err != nil {
+			log.Printf("GetRandomOldTaskHandler: error getting random task: %v", err)
 			http.Error(w, "Database error with getting task from tasks's slices", http.StatusInternalServerError)
 			return
 		}
@@ -225,7 +278,12 @@ func GetRandomOldTaskHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		log.Printf("GetRandomOldTaskHandler: returning task ID: %d", randomTask.ID)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(randomTask)
+		if err := json.NewEncoder(w).Encode(randomTask); err != nil {
+			log.Printf("GetRandomOldTaskHandler: error encoding response: %v", err)
+			http.Error(w, "Error encoding response", http.StatusInternalServerError)
+			return
+		}
 	}
 }
