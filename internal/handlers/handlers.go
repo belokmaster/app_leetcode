@@ -19,12 +19,13 @@ func parseLabels(labelsStr string) []database.Label {
 	labelStrs := strings.Split(labelsStr, ",")
 	labels := make([]database.Label, 0, len(labelStrs))
 
-	for _, labelStr := range labelStrs {
-		if labelStr == "" {
+	for _, ls := range labelStrs {
+		trimmedStr := strings.TrimSpace(ls)
+		if trimmedStr == "" {
 			continue
 		}
 
-		labelVal := parseInt(strings.TrimSpace(labelStr))
+		labelVal := parseInt(trimmedStr)
 		labels = append(labels, database.Label(labelVal))
 	}
 
@@ -69,7 +70,8 @@ func AddTaskHandler(db *sql.DB) http.HandlerFunc {
 			IsMasthaved:       r.FormValue("is_masthaved") == "on",
 		}
 
-		if labelsStr := r.FormValue("labels"); labelsStr != "" {
+		if labels, ok := r.Form["labels"]; ok {
+			labelsStr := strings.Join(labels, ",")
 			task.Labels = parseLabels(labelsStr)
 		}
 

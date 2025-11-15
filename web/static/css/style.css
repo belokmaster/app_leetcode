@@ -32,7 +32,8 @@ label {
 }
 
 input[type="number"],
-textarea {
+textarea,
+select {
     width: 96%;
     padding: 8px 12px;
     border: 2px solid #e1e8ed;
@@ -41,8 +42,10 @@ textarea {
     transition: border-color 0.3s;
 }
 
+
 input[type="number"]:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
     outline: none;
     border-color: #3498db;
 }
@@ -51,6 +54,12 @@ textarea {
     height: 80px;
     resize: vertical;
 }
+
+select[multiple] {
+    height: 150px;
+    padding: 10px;
+}
+
 
 input[type="checkbox"] {
     transform: scale(1.5);
@@ -118,6 +127,22 @@ button[type="submit"]:hover {
     color: #2c3e50;
     margin-right: 40px;
 }
+
+.task-labels {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.task-label {
+    background-color: #3498db;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
 
 .task-desc {
     color: #555;

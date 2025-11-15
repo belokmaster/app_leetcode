@@ -31,6 +31,77 @@
         </div>
 
         <div>
+            <label>Метки задачи:</label>
+            <select name="labels" multiple required>
+                <option value="0">Massive</option>
+                <option value="1">String</option>
+                <option value="2">HashTable</option>
+                <option value="3">Math</option>
+                <option value="4">DynamicProgramming</option>
+                <option value="5">Sorting</option>
+                <option value="6">Greedy</option>
+                <option value="7">DepthFirstSearch</option>
+                <option value="8">BinarySearch</option>
+                <option value="9">DataBase</option>
+                <option value="10">Matrix</option>
+                <option value="11">BitManipulation</option>
+                <option value="12">Tree</option>
+                <option value="13">BreadthFirstSearch</option>
+                <option value="14">TwoPointers</option>
+                <option value="15">PrefixSum</option>
+                <option value="16">Heap</option>
+                <option value="17">Simulation</option>
+                <option value="18">Counting</option>
+                <option value="19">Graph</option>
+                <option value="20">BinaryTree</option>
+                <option value="21">Stack</option>
+                <option value="22">SlidingWindow</option>
+                <option value="23">Design</option>
+                <option value="24">Enumeration</option>
+                <option value="25">Backtracking</option>
+                <option value="26">UnionFind</option>
+                <option value="27">NumberTheory</option>
+                <option value="28">LinkedList</option>
+                <option value="29">OrderedSet</option>
+                <option value="30">SegmentTree</option>
+                <option value="31">MonotonicStack</option>
+                <option value="32">Trie</option>
+                <option value="33">DivideAndConquer</option>
+                <option value="34">Combinatorics</option>
+                <option value="35">Bitmask</option>
+                <option value="36">Queue</option>
+                <option value="37">Recursion</option>
+                <option value="38">Geometry</option>
+                <option value="39">BinaryIndexedTree</option>
+                <option value="40">Memoization</option>
+                <option value="41">HashFunction</option>
+                <option value="42">BinarySearchTree</option>
+                <option value="43">ShortestPath</option>
+                <option value="44">StringMatching</option>
+                <option value="45">TopologicalSort</option>
+                <option value="46">RollingHash</option>
+                <option value="47">GameTheory</option>
+                <option value="48">Interactive</option>
+                <option value="49">DataStream</option>
+                <option value="50">MonotonicQueue</option>
+                <option value="51">Brainteaser</option>
+                <option value="52">DoubleLinkedList</option>
+                <option value="53">MergeSort</option>
+                <option value="54">Randomized</option>
+                <option value="55">CountingSort</option>
+                <option value="56">Iterator</option>
+                <option value="57">Concurrency</option>
+                <option value="58">SuffixArray</option>
+                <option value="59">LineSweep</option>
+                <option value="60">ProbabilityAndStatistics</option>
+                <option value="61">Quickselect</option>
+                <option value="62">MinimumSpanningTree</option>
+                <option value="63">BucketSort</option>
+                <option value="64">Shell</option>
+            </select>
+        </div>
+
+        <div>
             <label>
                 <input type="checkbox" name="solved_with_hint"> Была использована подсказка?
             </label>
@@ -76,6 +147,77 @@
                 <div>
                     <label>Дата решения:</label>
                     <input type="date" id="edit-solved-at" name="solved_at">
+                </div>
+
+                <div>
+                    <label>Labels:</label>
+                    <select id="edit-labels" name="labels" multiple required>
+                        <option value="0">Massive</option>
+                        <option value="1">String</option>
+                        <option value="2">HashTable</option>
+                        <option value="3">Math</option>
+                        <option value="4">DynamicProgramming</option>
+                        <option value="5">Sorting</option>
+                        <option value="6">Greedy</option>
+                        <option value="7">DepthFirstSearch</option>
+                        <option value="8">BinarySearch</option>
+                        <option value="9">DataBase</option>
+                        <option value="10">Matrix</option>
+                        <option value="11">BitManipulation</option>
+                        <option value="12">Tree</option>
+                        <option value="13">BreadthFirstSearch</option>
+                        <option value="14">TwoPointers</option>
+                        <option value="15">PrefixSum</option>
+                        <option value="16">Heap</option>
+                        <option value="17">Simulation</option>
+                        <option value="18">Counting</option>
+                        <option value="19">Graph</option>
+                        <option value="20">BinaryTree</option>
+                        <option value="21">Stack</option>
+                        <option value="22">SlidingWindow</option>
+                        <option value="23">Design</option>
+                        <option value="24">Enumeration</option>
+                        <option value="25">Backtracking</option>
+                        <option value="26">UnionFind</option>
+                        <option value="27">NumberTheory</option>
+                        <option value="28">LinkedList</option>
+                        <option value="29">OrderedSet</option>
+                        <option value="30">SegmentTree</option>
+                        <option value="31">MonotonicStack</option>
+                        <option value="32">Trie</option>
+                        <option value="33">DivideAndConquer</option>
+                        <option value="34">Combinatorics</option>
+                        <option value="35">Bitmask</option>
+                        <option value="36">Queue</option>
+                        <option value="37">Recursion</option>
+                        <option value="38">Geometry</option>
+                        <option value="39">BinaryIndexedTree</option>
+                        <option value="40">Memoization</option>
+                        <option value="41">HashFunction</option>
+                        <option value="42">BinarySearchTree</option>
+                        <option value="43">ShortestPath</option>
+                        <option value="44">StringMatching</option>
+                        <option value="45">TopologicalSort</option>
+                        <option value="46">RollingHash</option>
+                        <option value="47">GameTheory</option>
+                        <option value="48">Interactive</option>
+                        <option value="49">DataStream</option>
+                        <option value="50">MonotonicQueue</option>
+                        <option value="51">Brainteaser</option>
+                        <option value="52">DoubleLinkedList</option>
+                        <option value="53">MergeSort</option>
+                        <option value="54">Randomized</option>
+                        <option value="55">CountingSort</option>
+                        <option value="56">Iterator</option>
+                        <option value="57">Concurrency</option>
+                        <option value="58">SuffixArray</option>
+                        <option value="59">LineSweep</option>
+                        <option value="60">ProbabilityAndStatistics</option>
+                        <option value="61">Quickselect</option>
+                        <option value="62">MinimumSpanningTree</option>
+                        <option value="63">BucketSort</option>
+                        <option value="64">Shell</option>
+                    </select>
                 </div>
 
                 <div>

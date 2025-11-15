@@ -1,3 +1,35 @@
+const labelMap = {
+    0: "Massive", 1: "String", 2: "HashTable", 3: "Math", 4: "DynamicProgramming",
+    5: "Sorting", 6: "Greedy", 7: "DepthFirstSearch", 8: "BinarySearch", 9: "DataBase",
+    10: "Matrix", 11: "BitManipulation", 12: "Tree", 13: "BreadthFirstSearch",
+    14: "TwoPointers", 15: "PrefixSum", 16: "Heap", 17: "Simulation", 18: "Counting",
+    19: "Graph", 20: "BinaryTree", 21: "Stack", 22: "SlidingWindow", 23: "Design",
+    24: "Enumeration", 25: "Backtracking", 26: "UnionFind", 27: "NumberTheory",
+    28: "LinkedList", 29: "OrderedSet", 30: "SegmentTree", 31: "MonotonicStack",
+    32: "Trie", 33: "DivideAndConquer", 34: "Combinatorics", 35: "Bitmask",
+    36: "Queue", 37: "Recursion", 38: "Geometry", 39: "BinaryIndexedTree",
+    40: "Memoization", 41: "HashFunction", 42: "BinarySearchTree", 43: "ShortestPath",
+    44: "StringMatching", 45: "TopologicalSort", 46: "RollingHash", 47: "GameTheory",
+    48: "Interactive", 49: "DataStream", 50: "MonotonicQueue", 51: "Brainteaser",
+    52: "DoubleLinkedList", 53: "MergeSort", 54: "Randomized", 55: "CountingSort",
+    56: "Iterator", 57: "Concurrency", 58: "SuffixArray", 59: "LineSweep",
+    60: "ProbabilityAndStatistics", 61: "Quickselect", 62: "MinimumSpanningTree",
+    63: "BucketSort", 64: "Shell"
+};
+
+
+function getLabelsHTML(labels) {
+    if (!labels || labels.length === 0) {
+        return '';
+    }
+    const labelsHTML = labels.map(labelId => {
+        const labelName = labelMap[labelId] || `Unknown Label #${labelId}`;
+        return `<span class="task-label">${labelName}</span>`;
+    }).join('');
+    return `<div class="task-labels">${labelsHTML}</div>`;
+}
+
+
 // Функция загрузки задач
 async function loadTasks() {
     try {
@@ -5,15 +37,16 @@ async function loadTasks() {
         const tasks = await response.json();
 
         const container = document.getElementById('tasks-container');
-        if (tasks.length === 0) {
+        if (!tasks || tasks.length === 0) {
             container.innerHTML = '<div class="empty-state">Пока нет задач. Добавьте первую!</div>';
             return;
         }
 
         container.innerHTML = tasks.map(task => `
-            <div class="task-item ${getDifficultyClass(task.platform_difficult)}" id="task-${task.id}" onclick="openEditModal(${JSON.stringify(task).replace(/"/g, '&quot;')})">
+            <div class="task-item ${getDifficultyClass(task.platform_difficult)}" id="task-${task.id}" onclick='openEditModal(${JSON.stringify(task).replace(/'/g, "&apos;").replace(/"/g, "&quot;")})'>
                 <button class="delete-btn" onclick="event.stopPropagation(); deleteTask(${task.id})">×</button>
                 <div class="task-number">Задача #${task.number}</div>
+                ${getLabelsHTML(task.labels)}
                 <div class="task-desc">${task.description}</div>
                 
                 <div class="task-meta">
@@ -37,6 +70,7 @@ async function loadTasks() {
         document.getElementById('tasks-container').innerHTML = '<div class="empty-state">Ошибка загрузки задач</div>';
     }
 }
+
 
 // Функция удаления задачи
 async function deleteTask(id) {
@@ -134,8 +168,9 @@ async function searchTaskByNumber(number) {
         const data = await response.json();
 
         resultsContainer.innerHTML = `
-            <div class="search-result-item task-item ${getDifficultyClass(data.platform_difficult)}" onclick="openEditModal(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+            <div class="search-result-item task-item ${getDifficultyClass(data.platform_difficult)}" onclick='openEditModal(${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")})'>
                 <div class="task-number">Задача #${data.number}</div>
+                ${getLabelsHTML(data.labels)}
                 <div class="task-desc">${data.description}</div>
                 <div class="task-meta">
                     <span class="difficulty">Сложность: ${data.platform_difficult}/3</span>
@@ -173,6 +208,14 @@ function openEditModal(task) {
     document.getElementById('edit-solved-with-hint').checked = task.solved_with_hint;
     document.getElementById('edit-is-masthaved').checked = task.is_masthaved;
 
+    const labelsSelect = document.getElementById('edit-labels');
+    const taskLabels = task.labels || [];
+    for (let i = 0; i < labelsSelect.options.length; i++) {
+        const option = labelsSelect.options[i];
+        option.selected = taskLabels.includes(parseInt(option.value));
+    }
+
+
     if (task.solved_at) {
         const solvedDate = new Date(task.solved_at);
         document.getElementById('edit-solved-at').value = solvedDate.toISOString().split('T')[0];
@@ -193,6 +236,10 @@ async function handleEditFormSubmit(e) {
     e.preventDefault();
 
     const formData = new URLSearchParams();
+
+    const labelsSelect = document.getElementById('edit-labels');
+    const selectedLabels = Array.from(labelsSelect.selectedOptions).map(option => option.value);
+
     formData.append('id', document.getElementById('edit-id').value);
     formData.append('platform_difficult', document.getElementById('edit-platform-difficult').value);
     formData.append('my_difficult', document.getElementById('edit-my-difficult').value);
@@ -200,6 +247,8 @@ async function handleEditFormSubmit(e) {
     formData.append('solved_at', document.getElementById('edit-solved-at').value);
     formData.append('solved_with_hint', document.getElementById('edit-solved-with-hint').checked ? 'on' : '');
     formData.append('is_masthaved', document.getElementById('edit-is-masthaved').checked ? 'on' : '');
+    formData.append('labels', selectedLabels.join(','));
+
 
     try {
         const response = await fetch('/api/tasks/update', {
@@ -236,8 +285,9 @@ async function getRandomOldTask() {
         }
 
         resultContainer.innerHTML = `
-            <div class="random-task-item task-item ${getDifficultyClass(data.platform_difficult)}" onclick="openEditModal(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+            <div class="random-task-item task-item ${getDifficultyClass(data.platform_difficult)}" onclick='openEditModal(${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")})'>
                 <div class="task-number">Задача #${data.number}</div>
+                ${getLabelsHTML(data.labels)}
                 <div class="task-desc">${data.description}</div>
                 <div class="task-meta">
                     <span class="difficulty">Сложность: ${data.platform_difficult}/3</span>

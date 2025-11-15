@@ -74,7 +74,14 @@ func AddTask(db *sql.DB, task Task) error {
 		is_masthaved,
 		solved_at,
 		labels
-	) VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)`
+	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+
+	var solvedAt interface{}
+	if task.SolvedAt != nil {
+		solvedAt = *task.SolvedAt
+	} else {
+		solvedAt = nil
+	}
 
 	_, err := db.Exec(query,
 		task.Number,
@@ -83,6 +90,7 @@ func AddTask(db *sql.DB, task Task) error {
 		task.Description,
 		task.SolvedWithHint,
 		task.IsMasthaved,
+		solvedAt,
 		pq.Array(intLabels),
 	)
 
@@ -114,7 +122,7 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 	for rows.Next() {
 		var task Task
 		var solvedAt sql.NullTime
-		var intLabels []int
+		var intLabels []int64
 
 		err := rows.Scan(
 			&task.ID,
@@ -185,7 +193,7 @@ func FindTaskByNumber(db *sql.DB, number int) (*Task, error) {
 
 	var task Task
 	var solvedAt sql.NullTime
-	var intLabels []int
+	var intLabels []int64
 
 	err := db.QueryRow(query, number).Scan(
 		&task.ID,
@@ -274,7 +282,7 @@ func GetRandomTasks(db *sql.DB) ([]Task, error) {
 	for rows.Next() {
 		var task Task
 		var solvedAt sql.NullTime
-		var intLabels []int
+		var intLabels []int64
 
 		err := rows.Scan(
 			&task.ID,
