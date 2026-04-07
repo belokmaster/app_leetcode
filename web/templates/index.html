@@ -18,10 +18,16 @@
     <main class="layout">
         <section class="hero reveal">
             <p class="eyebrow">Personal LeetCode tracker</p>
-            <h1>LeetFlow Board</h1>
+            <h1>LeetCode App</h1>
             <p class="hero-copy">Добавляй задачи, быстро находи старые, редактируй прогресс и держи фокус на реально важных темах.</p>
+        </section>
 
-            <div class="stats-grid">
+        <section class="card metrics-section reveal delay-1">
+            <div class="card-head">
+                <h2>Метрики прогресса</h2>
+                <p>Ключевые показатели в одном отдельном блоке.</p>
+            </div>
+            <div class="stats-grid large">
                 <article class="stat-card">
                     <span class="stat-label">Всего задач</span>
                     <strong id="stat-total">0</strong>
@@ -41,7 +47,7 @@
             </div>
         </section>
 
-        <section class="card reveal delay-1">
+        <section class="card reveal delay-2">
             <div class="card-head">
                 <h2>Добавить задачу</h2>
                 <p>Быстрый ввод, чтобы не терять ритм.</p>
@@ -50,25 +56,36 @@
             <form id="add-task-form" action="/tasks" method="POST" class="task-form">
                 <div class="grid two">
                     <label class="field">
+                        <span>Моя сложность (1-10)</span>
+                        <div class="difficulty-control compact">
+                            <input type="range" id="add-my-difficult-range" min="1" max="10" value="5">
+                            <div class="difficulty-value" id="add-my-difficult-value">5</div>
+                        </div>
+                        <input type="hidden" id="add-my-difficult" name="my_difficult" value="5" required>
+                    </label>
+                    <label class="field">
                         <span>Номер задачи</span>
                         <input type="number" name="number" required>
                     </label>
                     <label class="field">
                         <span>Сложность платформы (1-3)</span>
-                        <input type="number" name="platform_difficult" min="1" max="3" required>
+                        <div class="difficulty-control compact">
+                            <input type="range" id="add-platform-difficult-range" min="1" max="3" value="2">
+                            <div class="difficulty-value" id="add-platform-difficult-value">2</div>
+                        </div>
+                        <input type="hidden" id="add-platform-difficult" name="platform_difficult" value="2" required>
                     </label>
                 </div>
 
-                <div class="grid two">
-                    <label class="field">
-                        <span>Моя сложность (1-10)</span>
-                        <input type="number" name="my_difficult" min="1" max="10" required>
-                    </label>
-                    <label class="field">
-                        <span>Метки (multi-select)</span>
-                        <select id="add-labels" name="labels" multiple required></select>
-                    </label>
-                </div>
+                <label class="field">
+                    <span>Метки</span>
+                    <div class="label-picker spacious" data-select-id="add-labels">
+                        <input type="text" class="label-search" placeholder="Найти метку...">
+                        <div class="label-options"></div>
+                        <div class="label-summary">Выбрано: <strong class="label-count">0</strong></div>
+                    </div>
+                    <select id="add-labels" name="labels" multiple class="native-select"></select>
+                </label>
 
                 <label class="field">
                     <span>Описание</span>
@@ -132,19 +149,24 @@
 
                 <div class="grid two">
                     <label class="field">
+                        <span>Моя сложность (1-10)</span>
+                        <div class="difficulty-control compact">
+                            <input type="range" id="edit-my-difficult-range" min="1" max="10" value="5">
+                            <div class="difficulty-value" id="edit-my-difficult-value">5</div>
+                        </div>
+                        <input type="hidden" id="edit-my-difficult" name="my_difficult" value="5" required>
+                    </label>
+                    <label class="field">
                         <span>Номер задачи</span>
                         <input type="number" id="edit-number" disabled>
                     </label>
                     <label class="field">
                         <span>Сложность платформы (1-3)</span>
-                        <input type="number" id="edit-platform-difficult" name="platform_difficult" min="1" max="3" required>
-                    </label>
-                </div>
-
-                <div class="grid two">
-                    <label class="field">
-                        <span>Моя сложность (1-10)</span>
-                        <input type="number" id="edit-my-difficult" name="my_difficult" min="1" max="10" required>
+                        <div class="difficulty-control compact">
+                            <input type="range" id="edit-platform-difficult-range" min="1" max="3" value="2">
+                            <div class="difficulty-value" id="edit-platform-difficult-value">2</div>
+                        </div>
+                        <input type="hidden" id="edit-platform-difficult" name="platform_difficult" value="2" required>
                     </label>
                     <label class="field">
                         <span>Дата решения</span>
@@ -159,7 +181,12 @@
 
                 <label class="field">
                     <span>Метки</span>
-                    <select id="edit-labels" name="labels" multiple required></select>
+                    <div class="label-picker spacious" data-select-id="edit-labels">
+                        <input type="text" class="label-search" placeholder="Найти метку...">
+                        <div class="label-options"></div>
+                        <div class="label-summary">Выбрано: <strong class="label-count">0</strong></div>
+                    </div>
+                    <select id="edit-labels" name="labels" multiple class="native-select"></select>
                 </label>
 
                 <div class="toggles">

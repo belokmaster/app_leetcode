@@ -97,6 +97,14 @@ h1 {
     gap: 12px;
 }
 
+.stats-grid.large {
+    gap: 16px;
+}
+
+.metrics-section {
+    padding: 26px;
+}
+
 .stat-card {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -109,6 +117,14 @@ h1 {
     display: block;
     margin-top: 2px;
     font-size: 1.45rem;
+}
+
+.stats-grid.large .stat-card {
+    padding: 18px;
+}
+
+.stats-grid.large .stat-card strong {
+    font-size: 1.9rem;
 }
 
 .stat-label {
@@ -140,6 +156,10 @@ h1 {
     gap: 8px;
 }
 
+.field {
+    position: relative;
+}
+
 .grid.two {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -154,6 +174,7 @@ h1 {
 }
 
 input[type="number"],
+input[type="text"],
 input[type="date"],
 textarea,
 select {
@@ -171,8 +192,95 @@ textarea {
     resize: vertical;
 }
 
+.difficulty-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.difficulty-control.compact {
+    width: 100%;
+}
+
+input[type="range"] {
+    flex: 1;
+    accent-color: var(--brand);
+    height: 4px;
+}
+
+.difficulty-value {
+    min-width: 30px;
+    text-align: center;
+    padding: 4px 7px;
+    border-radius: 8px;
+    background: #edf7f6;
+    border: 1px solid #d4ece9;
+    font-weight: 700;
+    color: #256f6a;
+}
+
 select[multiple] {
     min-height: 150px;
+}
+
+.native-select {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.label-picker {
+    border: 1px solid #c9bca3;
+    border-radius: 12px;
+    background: #fff;
+    padding: 10px;
+}
+
+.label-picker.spacious {
+    padding: 14px;
+}
+
+.label-search {
+    margin-bottom: 8px;
+}
+
+.label-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 260px;
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.label-chip {
+    border: 1px solid #d5cab2;
+    border-radius: 999px;
+    padding: 5px 9px;
+    background: #fbf7ef;
+    color: #3c4a56;
+    cursor: pointer;
+    font-size: 0.77rem;
+    font-weight: 700;
+    transition: 120ms ease;
+}
+
+.label-chip:hover {
+    border-color: var(--brand);
+}
+
+.label-chip.active {
+    background: #e2f4f2;
+    border-color: #8bcfc8;
+    color: #0d6660;
+}
+
+.label-summary {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
 }
 
 input:focus,

@@ -32,6 +32,110 @@ function populateLabelSelects() {
     });
 }
 
+function syncDifficultyValue(prefix, kind) {
+    const range = document.getElementById(`${prefix}-${kind}-range`);
+    const hidden = document.getElementById(`${prefix}-${kind}`);
+    const value = document.getElementById(`${prefix}-${kind}-value`);
+    if (!range || !hidden || !value) {
+        return;
+    }
+
+    value.textContent = range.value;
+    hidden.value = range.value;
+}
+
+function bindDifficultyControls() {
+    ['add', 'edit'].forEach((prefix) => {
+        ['my-difficult', 'platform-difficult'].forEach((kind) => {
+            const range = document.getElementById(`${prefix}-${kind}-range`);
+            if (!range) {
+                return;
+            }
+
+            range.addEventListener('input', () => syncDifficultyValue(prefix, kind));
+            syncDifficultyValue(prefix, kind);
+        });
+    });
+}
+
+function buildLabelPicker(selectId) {
+    const select = document.getElementById(selectId);
+    const picker = document.querySelector(`.label-picker[data-select-id="${selectId}"]`);
+    if (!select || !picker) {
+        return;
+    }
+
+    const searchInput = picker.querySelector('.label-search');
+    const optionsWrap = picker.querySelector('.label-options');
+    const counter = picker.querySelector('.label-count');
+
+    const render = () => {
+        const query = (searchInput.value || '').toLowerCase().trim();
+        const options = Array.from(select.options);
+        counter.textContent = String(options.filter(option => option.selected).length);
+
+        optionsWrap.innerHTML = options
+            .filter(option => option.text.toLowerCase().includes(query))
+            .map(option => `
+                <button type="button" class="label-chip ${option.selected ? 'active' : ''}" data-value="${option.value}">
+                    ${option.text}
+                </button>
+            `)
+            .join('');
+    };
+
+    optionsWrap.addEventListener('click', (e) => {
+        const button = e.target.closest('.label-chip');
+        if (!button) {
+            return;
+        }
+
+        const option = Array.from(select.options).find(o => o.value === button.dataset.value);
+        if (!option) {
+            return;
+        }
+
+        option.selected = !option.selected;
+        render();
+    });
+
+    searchInput.addEventListener('input', render);
+    select.dataset.pickerInitialized = 'true';
+    render();
+}
+
+function syncLabelPicker(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select || select.dataset.pickerInitialized !== 'true') {
+        return;
+    }
+
+    const picker = document.querySelector(`.label-picker[data-select-id="${selectId}"]`);
+    const searchInput = picker.querySelector('.label-search');
+    const optionsWrap = picker.querySelector('.label-options');
+    const counter = picker.querySelector('.label-count');
+    const query = (searchInput.value || '').toLowerCase().trim();
+    const options = Array.from(select.options);
+
+    counter.textContent = String(options.filter(option => option.selected).length);
+    optionsWrap.innerHTML = options
+        .filter(option => option.text.toLowerCase().includes(query))
+        .map(option => `
+            <button type="button" class="label-chip ${option.selected ? 'active' : ''}" data-value="${option.value}">
+                ${option.text}
+            </button>
+        `)
+        .join('');
+}
+
+function hasSelectedLabels(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) {
+        return true;
+    }
+    return Array.from(select.options).some(option => option.selected);
+}
+
 function updateStats(tasks) {
     const total = tasks.length;
     const solved = tasks.filter(task => Boolean(task.solved_at)).length;
@@ -157,13 +261,21 @@ async function deleteTask(id) {
 // Загружаем задачи при загрузке страницы
 document.addEventListener('DOMContentLoaded', function () {
     populateLabelSelects();
+    buildLabelPicker('add-labels');
+    buildLabelPicker('edit-labels');
+    bindDifficultyControls();
     loadTasks();
 
     // Обновляем каждые 10 секунд
     setInterval(loadTasks, 10000);
 
     // Обновляем после добавления новой задачи
-    document.getElementById('add-task-form').addEventListener('submit', function () {
+    document.getElementById('add-task-form').addEventListener('submit', function (e) {
+        if (!hasSelectedLabels('add-labels')) {
+            e.preventDefault();
+            showMessage('Выбери хотя бы одну метку', true);
+            return;
+        }
         setTimeout(loadTasks, 1000);
     });
 
@@ -253,7 +365,11 @@ function openEditModal(task) {
     document.getElementById('edit-id').value = task.id;
     document.getElementById('edit-number').value = task.number;
     document.getElementById('edit-platform-difficult').value = task.platform_difficult;
+    document.getElementById('edit-platform-difficult-range').value = task.platform_difficult;
+    syncDifficultyValue('edit', 'platform-difficult');
     document.getElementById('edit-my-difficult').value = task.my_difficult;
+    document.getElementById('edit-my-difficult-range').value = task.my_difficult;
+    syncDifficultyValue('edit', 'my-difficult');
     document.getElementById('edit-description').value = task.description;
     document.getElementById('edit-solved-with-hint').checked = task.solved_with_hint;
     document.getElementById('edit-is-masthaved').checked = task.is_masthaved;
@@ -264,6 +380,7 @@ function openEditModal(task) {
         const option = labelsSelect.options[i];
         option.selected = taskLabels.includes(parseInt(option.value));
     }
+    syncLabelPicker('edit-labels');
 
 
     if (task.solved_at) {
@@ -284,6 +401,11 @@ function closeEditModal() {
 // Обработчик отправки формы редактирования
 async function handleEditFormSubmit(e) {
     e.preventDefault();
+
+    if (!hasSelectedLabels('edit-labels')) {
+        showMessage('Выбери хотя бы одну метку', true);
+        return;
+    }
 
     const formData = new URLSearchParams();
 
