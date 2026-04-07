@@ -3,6 +3,7 @@
 *.xlsx
 *.bin
 *.json
+*.db
 
 app
 leetcode_ap

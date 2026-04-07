@@ -4,13 +4,10 @@ import (
 	"leetcodeapp/internal/database"
 	"log"
 	"net/http"
-
-	_ "github.com/lib/pq"
 )
 
 func main() {
-	path := "config.json"
-	db, err := database.InitDB(path)
+	db, err := database.InitDB()
 	if err != nil {
 		log.Fatalf("problem with init db: %v", err)
 	}

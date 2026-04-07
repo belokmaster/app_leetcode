@@ -3,22 +3,16 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"leetcodeapp/internal/config"
 	"math/rand"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-func InitDB(path string) (*sql.DB, error) {
-	config, err := config.ReadConfig(path)
-	if err != nil {
-		return nil, fmt.Errorf("problem with gettig config: %v", err)
-	}
-
-	connStr := config.ConnectionString()
-
-	db, err := sql.Open("postgres", connStr)
+func InitDB() (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", "app.db")
 	if err != nil {
 		return nil, fmt.Errorf("problem with opening db: %v", err)
 	}
@@ -36,35 +30,55 @@ func InitDB(path string) (*sql.DB, error) {
 
 func CreateTables(db *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS tasks (
-		id SERIAL PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		number INTEGER,
-		created_at TIMESTAMP DEFAULT NOW(),
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		solved_at TIMESTAMP,
 		platform_difficult INTEGER,
 		my_difficult INTEGER, 
 		solved_with_hint BOOLEAN,
 		description TEXT,
 		is_masthaved BOOLEAN,
-		labels INTEGER[]
+		labels TEXT
 	);`
 
 	_, err := db.Exec(query)
 	return err
 }
 
-func labelsToInt(intLabels []Label) []int {
-	labels := make([]int, len(intLabels))
+func encodeLabels(labels []Label) string {
+	if len(labels) == 0 {
+		return ""
+	}
 
-	for i, il := range intLabels {
-		labels[i] = int(il)
+	parts := make([]string, len(labels))
+	for i, l := range labels {
+		parts[i] = strconv.Itoa(int(l))
+	}
+
+	return strings.Join(parts, ",")
+}
+
+func decodeLabels(raw string) []Label {
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+
+	parts := strings.Split(raw, ",")
+	labels := make([]Label, 0, len(parts))
+
+	for _, p := range parts {
+		v, err := strconv.Atoi(strings.TrimSpace(p))
+		if err != nil {
+			continue
+		}
+		labels = append(labels, Label(v))
 	}
 
 	return labels
 }
 
 func AddTask(db *sql.DB, task Task) error {
-	intLabels := labelsToInt(task.Labels)
-
 	query := `INSERT INTO tasks (
 		number, 
 		platform_difficult, 
@@ -74,7 +88,7 @@ func AddTask(db *sql.DB, task Task) error {
 		is_masthaved,
 		solved_at,
 		labels
-	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 
 	var solvedAt interface{}
 	if task.SolvedAt != nil {
@@ -91,7 +105,7 @@ func AddTask(db *sql.DB, task Task) error {
 		task.SolvedWithHint,
 		task.IsMasthaved,
 		solvedAt,
-		pq.Array(intLabels),
+		encodeLabels(task.Labels),
 	)
 
 	return err
@@ -122,7 +136,7 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 	for rows.Next() {
 		var task Task
 		var solvedAt sql.NullTime
-		var intLabels []int64
+		var labelsRaw sql.NullString
 
 		err := rows.Scan(
 			&task.ID,
@@ -134,7 +148,7 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 			&task.SolvedWithHint,
 			&task.Description,
 			&task.IsMasthaved,
-			pq.Array(&intLabels),
+			&labelsRaw,
 		)
 
 		if err != nil {
@@ -145,9 +159,8 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 			task.SolvedAt = &solvedAt.Time
 		}
 
-		task.Labels = make([]Label, len(intLabels))
-		for i, il := range intLabels {
-			task.Labels[i] = Label(il)
+		if labelsRaw.Valid {
+			task.Labels = decodeLabels(labelsRaw.String)
 		}
 
 		tasks = append(tasks, task)
@@ -157,7 +170,7 @@ func GetAllTasks(db *sql.DB) ([]Task, error) {
 }
 
 func DeleteTask(db *sql.DB, id int) error {
-	query := `DELETE FROM tasks WHERE id = $1`
+	query := `DELETE FROM tasks WHERE id = ?`
 	result, err := db.Exec(query, id)
 	if err != nil {
 		return fmt.Errorf("error retrieving task ID during delete operation: %v", err)
@@ -189,11 +202,11 @@ func FindTaskByNumber(db *sql.DB, number int) (*Task, error) {
 		is_masthaved,
 		labels
 	FROM tasks 
-	WHERE number = $1`
+		WHERE number = ?`
 
 	var task Task
 	var solvedAt sql.NullTime
-	var intLabels []int64
+		var labelsRaw sql.NullString
 
 	err := db.QueryRow(query, number).Scan(
 		&task.ID,
@@ -205,7 +218,7 @@ func FindTaskByNumber(db *sql.DB, number int) (*Task, error) {
 		&task.SolvedWithHint,
 		&task.Description,
 		&task.IsMasthaved,
-		pq.Array(&intLabels),
+		&labelsRaw,
 	)
 
 	if err != nil {
@@ -216,9 +229,8 @@ func FindTaskByNumber(db *sql.DB, number int) (*Task, error) {
 		task.SolvedAt = &solvedAt.Time
 	}
 
-	task.Labels = make([]Label, len(intLabels))
-	for i, il := range intLabels {
-		task.Labels[i] = Label(il)
+	if labelsRaw.Valid {
+		task.Labels = decodeLabels(labelsRaw.String)
 	}
 
 	return &task, nil
@@ -226,14 +238,14 @@ func FindTaskByNumber(db *sql.DB, number int) (*Task, error) {
 
 func UpdateTask(db *sql.DB, task Task) error {
 	query := `UPDATE tasks SET 
-		platform_difficult = $1,
-		my_difficult = $2,
-		description = $3,
-		solved_with_hint = $4,
-		is_masthaved = $5,
-		solved_at = $6,
-		labels = $7
-	WHERE id = $8`
+		platform_difficult = ?,
+		my_difficult = ?,
+		description = ?,
+		solved_with_hint = ?,
+		is_masthaved = ?,
+		solved_at = ?,
+		labels = ?
+	WHERE id = ?`
 
 	var solvedAt interface{}
 	if task.SolvedAt != nil {
@@ -249,7 +261,7 @@ func UpdateTask(db *sql.DB, task Task) error {
 		task.SolvedWithHint,
 		task.IsMasthaved,
 		solvedAt,
-		pq.Array(labelsToInt(task.Labels)),
+		encodeLabels(task.Labels),
 		task.ID,
 	)
 
@@ -269,7 +281,8 @@ func GetRandomTasks(db *sql.DB) ([]Task, error) {
 		is_masthaved,
 		labels 
 	FROM tasks 
-	WHERE solved_at < CURRENT_DATE - INTERVAL '2 weeks'
+	WHERE solved_at IS NOT NULL
+	  AND solved_at < datetime('now', '-14 days')
 	ORDER BY solved_at`
 
 	rows, err := db.Query(query)
@@ -282,7 +295,7 @@ func GetRandomTasks(db *sql.DB) ([]Task, error) {
 	for rows.Next() {
 		var task Task
 		var solvedAt sql.NullTime
-		var intLabels []int64
+		var labelsRaw sql.NullString
 
 		err := rows.Scan(
 			&task.ID,
@@ -294,7 +307,7 @@ func GetRandomTasks(db *sql.DB) ([]Task, error) {
 			&task.SolvedWithHint,
 			&task.Description,
 			&task.IsMasthaved,
-			pq.Array(&intLabels),
+			&labelsRaw,
 		)
 
 		if err != nil {
@@ -305,9 +318,8 @@ func GetRandomTasks(db *sql.DB) ([]Task, error) {
 			task.SolvedAt = &solvedAt.Time
 		}
 
-		task.Labels = make([]Label, len(intLabels))
-		for i, il := range intLabels {
-			task.Labels[i] = Label(il)
+		if labelsRaw.Valid {
+			task.Labels = decodeLabels(labelsRaw.String)
 		}
 
 		tasks = append(tasks, task)

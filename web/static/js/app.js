@@ -17,6 +17,52 @@ const labelMap = {
     63: "BucketSort", 64: "Shell"
 };
 
+function populateLabelSelects() {
+    const selects = [
+        document.getElementById('add-labels'),
+        document.getElementById('edit-labels')
+    ].filter(Boolean);
+
+    const optionsHTML = Object.entries(labelMap)
+        .map(([value, text]) => `<option value="${value}">${text}</option>`)
+        .join('');
+
+    selects.forEach((select) => {
+        select.innerHTML = optionsHTML;
+    });
+}
+
+function updateStats(tasks) {
+    const total = tasks.length;
+    const solved = tasks.filter(task => Boolean(task.solved_at)).length;
+    const alone = tasks.filter(task => !task.solved_with_hint).length;
+    const mastered = tasks.filter(task => task.is_masthaved).length;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-solved').textContent = solved;
+    document.getElementById('stat-alone').textContent = alone;
+    document.getElementById('stat-mastered').textContent = mastered;
+}
+
+function showMessage(text, isError = false) {
+    const toast = document.createElement('div');
+    toast.textContent = text;
+    toast.style.position = 'fixed';
+    toast.style.right = '16px';
+    toast.style.bottom = '16px';
+    toast.style.padding = '10px 14px';
+    toast.style.borderRadius = '10px';
+    toast.style.fontWeight = '700';
+    toast.style.zIndex = '1200';
+    toast.style.background = isError ? '#fce8ea' : '#dff4ef';
+    toast.style.color = isError ? '#a83944' : '#0f756d';
+    toast.style.border = `1px solid ${isError ? '#e8aab2' : '#95d5c9'}`;
+    toast.style.boxShadow = '0 10px 24px rgba(15, 27, 38, 0.15)';
+
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2200);
+}
+
 
 function getLabelsHTML(labels) {
     if (!labels || labels.length === 0) {
@@ -35,6 +81,7 @@ async function loadTasks() {
     try {
         const response = await fetch('/api/tasks');
         const tasks = await response.json();
+        updateStats(tasks || []);
 
         const container = document.getElementById('tasks-container');
         if (!tasks || tasks.length === 0) {
@@ -67,6 +114,7 @@ async function loadTasks() {
             </div>
         `).join('');
     } catch (error) {
+        updateStats([]);
         document.getElementById('tasks-container').innerHTML = '<div class="empty-state">Ошибка загрузки задач</div>';
     }
 }
@@ -96,23 +144,26 @@ async function deleteTask(id) {
                 taskElement.style.opacity = '0';
                 setTimeout(() => taskElement.remove(), 300);
             }
+            showMessage('Задача удалена');
+            setTimeout(loadTasks, 320);
         } else {
-            alert('Ошибка удаления');
+            showMessage('Ошибка удаления', true);
         }
     } catch (error) {
-        alert('Ошибка сети');
+        showMessage('Ошибка сети', true);
     }
 }
 
 // Загружаем задачи при загрузке страницы
 document.addEventListener('DOMContentLoaded', function () {
+    populateLabelSelects();
     loadTasks();
 
     // Обновляем каждые 10 секунд
     setInterval(loadTasks, 10000);
 
     // Обновляем после добавления новой задачи
-    document.querySelector('form').addEventListener('submit', function () {
+    document.getElementById('add-task-form').addEventListener('submit', function () {
         setTimeout(loadTasks, 1000);
     });
 
@@ -157,7 +208,7 @@ async function searchTaskByNumber(number) {
         if (!response.ok) {
             if (response.status === 404) {
                 resultsContainer.innerHTML =
-                    `<div style="color: #7f8c8d; text-align: center;">Задача с номером ${number} не найдена.</div>`;
+                    `<div class="empty-state">Задача с номером ${number} не найдена.</div>`;
             } else {
                 throw new Error(`Ошибка сервера: ${response.status}`);
             }
@@ -190,14 +241,13 @@ async function searchTaskByNumber(number) {
         `;
     } catch (error) {
         resultsContainer.innerHTML =
-            `<div style="color: #e74c3c; text-align: center;">Не удалось выполнить поиск. Проверьте соединение с сервером.</div>`;
+            `<div class="empty-state">Не удалось выполнить поиск. Проверьте соединение с сервером.</div>`;
     }
 }
 
 // Открытие модального окна при клике на задачу
 function openEditModal(task) {
     const modal = document.getElementById('edit-modal');
-    const form = document.getElementById('edit-form');
 
     // Заполняем форму данными задачи
     document.getElementById('edit-id').value = task.id;
@@ -262,13 +312,12 @@ async function handleEditFormSubmit(e) {
         if (response.ok) {
             closeEditModal();
             loadTasks();
-            alert('Задача обновлена!');
-            location.reload()
+            showMessage('Задача обновлена!');
         } else {
-            alert('Ошибка обновления задачи');
+            showMessage('Ошибка обновления задачи', true);
         }
     } catch (error) {
-        alert('Ошибка сети');
+        showMessage('Ошибка сети', true);
     }
 }
 
@@ -280,7 +329,7 @@ async function getRandomOldTask() {
         const resultContainer = document.getElementById('random-task-result');
 
         if (data.error) {
-            resultContainer.innerHTML = `<div style="color: #e74c3c; text-align: center;">${data.error}</div>`;
+            resultContainer.innerHTML = `<div class="empty-state">${data.error}</div>`;
             return;
         }
 
@@ -307,7 +356,7 @@ async function getRandomOldTask() {
         `;
     } catch (error) {
         document.getElementById('random-task-result').innerHTML =
-            `<div style="color: #e74c3c; text-align: center;">Ошибка загрузки</div>`;
+            `<div class="empty-state">Ошибка загрузки</div>`;
     }
 }
 

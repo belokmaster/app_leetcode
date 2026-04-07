@@ -1,263 +1,180 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 
 <head>
-    <title>LeetCode App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetFlow | Tasks Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
-    <h1>LeetCode Tasks</h1>
+    <div class="bg-deco bg-deco-one"></div>
+    <div class="bg-deco bg-deco-two"></div>
 
-    <form action="/tasks" method="POST">
-        <div>
-            <label>Номер задачи:</label>
-            <input type="number" name="number" required>
-        </div>
+    <main class="layout">
+        <section class="hero reveal">
+            <p class="eyebrow">Personal LeetCode tracker</p>
+            <h1>LeetFlow Board</h1>
+            <p class="hero-copy">Добавляй задачи, быстро находи старые, редактируй прогресс и держи фокус на реально важных темах.</p>
 
-        <div>
-            <label>Сложность платформы (1-3):</label>
-            <input type="number" name="platform_difficult" min="1" max="3" required>
-        </div>
+            <div class="stats-grid">
+                <article class="stat-card">
+                    <span class="stat-label">Всего задач</span>
+                    <strong id="stat-total">0</strong>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">Решено</span>
+                    <strong id="stat-solved">0</strong>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">Без подсказки</span>
+                    <strong id="stat-alone">0</strong>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">Must have</span>
+                    <strong id="stat-mastered">0</strong>
+                </article>
+            </div>
+        </section>
 
-        <div>
-            <label>Моя сложность (1-10):</label>
-            <input type="number" name="my_difficult" min="1" max="10" required>
-        </div>
+        <section class="card reveal delay-1">
+            <div class="card-head">
+                <h2>Добавить задачу</h2>
+                <p>Быстрый ввод, чтобы не терять ритм.</p>
+            </div>
 
-        <div>
-            <label>Описание:</label>
-            <textarea name="description" placeholder="Опишите задачу..." required></textarea>
-        </div>
+            <form id="add-task-form" action="/tasks" method="POST" class="task-form">
+                <div class="grid two">
+                    <label class="field">
+                        <span>Номер задачи</span>
+                        <input type="number" name="number" required>
+                    </label>
+                    <label class="field">
+                        <span>Сложность платформы (1-3)</span>
+                        <input type="number" name="platform_difficult" min="1" max="3" required>
+                    </label>
+                </div>
 
-        <div>
-            <label>Метки задачи:</label>
-            <select name="labels" multiple required>
-                <option value="0">Massive</option>
-                <option value="1">String</option>
-                <option value="2">HashTable</option>
-                <option value="3">Math</option>
-                <option value="4">DynamicProgramming</option>
-                <option value="5">Sorting</option>
-                <option value="6">Greedy</option>
-                <option value="7">DepthFirstSearch</option>
-                <option value="8">BinarySearch</option>
-                <option value="9">DataBase</option>
-                <option value="10">Matrix</option>
-                <option value="11">BitManipulation</option>
-                <option value="12">Tree</option>
-                <option value="13">BreadthFirstSearch</option>
-                <option value="14">TwoPointers</option>
-                <option value="15">PrefixSum</option>
-                <option value="16">Heap</option>
-                <option value="17">Simulation</option>
-                <option value="18">Counting</option>
-                <option value="19">Graph</option>
-                <option value="20">BinaryTree</option>
-                <option value="21">Stack</option>
-                <option value="22">SlidingWindow</option>
-                <option value="23">Design</option>
-                <option value="24">Enumeration</option>
-                <option value="25">Backtracking</option>
-                <option value="26">UnionFind</option>
-                <option value="27">NumberTheory</option>
-                <option value="28">LinkedList</option>
-                <option value="29">OrderedSet</option>
-                <option value="30">SegmentTree</option>
-                <option value="31">MonotonicStack</option>
-                <option value="32">Trie</option>
-                <option value="33">DivideAndConquer</option>
-                <option value="34">Combinatorics</option>
-                <option value="35">Bitmask</option>
-                <option value="36">Queue</option>
-                <option value="37">Recursion</option>
-                <option value="38">Geometry</option>
-                <option value="39">BinaryIndexedTree</option>
-                <option value="40">Memoization</option>
-                <option value="41">HashFunction</option>
-                <option value="42">BinarySearchTree</option>
-                <option value="43">ShortestPath</option>
-                <option value="44">StringMatching</option>
-                <option value="45">TopologicalSort</option>
-                <option value="46">RollingHash</option>
-                <option value="47">GameTheory</option>
-                <option value="48">Interactive</option>
-                <option value="49">DataStream</option>
-                <option value="50">MonotonicQueue</option>
-                <option value="51">Brainteaser</option>
-                <option value="52">DoubleLinkedList</option>
-                <option value="53">MergeSort</option>
-                <option value="54">Randomized</option>
-                <option value="55">CountingSort</option>
-                <option value="56">Iterator</option>
-                <option value="57">Concurrency</option>
-                <option value="58">SuffixArray</option>
-                <option value="59">LineSweep</option>
-                <option value="60">ProbabilityAndStatistics</option>
-                <option value="61">Quickselect</option>
-                <option value="62">MinimumSpanningTree</option>
-                <option value="63">BucketSort</option>
-                <option value="64">Shell</option>
-            </select>
-        </div>
+                <div class="grid two">
+                    <label class="field">
+                        <span>Моя сложность (1-10)</span>
+                        <input type="number" name="my_difficult" min="1" max="10" required>
+                    </label>
+                    <label class="field">
+                        <span>Метки (multi-select)</span>
+                        <select id="add-labels" name="labels" multiple required></select>
+                    </label>
+                </div>
 
-        <div>
-            <label>
-                <input type="checkbox" name="solved_with_hint"> Была использована подсказка?
-            </label>
-        </div>
+                <label class="field">
+                    <span>Описание</span>
+                    <textarea name="description" placeholder="Ключевая идея, где застрял, что запомнить..." required></textarea>
+                </label>
 
-        <div>
-            <label>
-                <input type="checkbox" name="is_masthaved"> Необходимая задача?
-            </label>
-        </div>
+                <div class="toggles">
+                    <label class="check">
+                        <input type="checkbox" name="solved_with_hint">
+                        <span>Была использована подсказка</span>
+                    </label>
+                    <label class="check">
+                        <input type="checkbox" name="is_masthaved">
+                        <span>Must-have задача</span>
+                    </label>
+                </div>
 
-        <button type="submit">Добавить задачу</button>
-    </form>
+                <button type="submit" class="btn btn-primary">Добавить задачу</button>
+            </form>
+        </section>
+
+        <section class="tools reveal delay-2">
+            <article class="card tool-card">
+                <div class="card-head">
+                    <h2>Поиск по номеру</h2>
+                    <p>Быстрый доступ к конкретной задаче.</p>
+                </div>
+                <form id="search-form" class="search-form">
+                    <input type="number" name="search_number" placeholder="Например, 121" required>
+                    <button type="submit" class="btn">Найти</button>
+                </form>
+                <div id="search-results" class="result-zone"></div>
+            </article>
+
+            <article class="card tool-card">
+                <div class="card-head">
+                    <h2>Случайная старая задача</h2>
+                    <p>Для повторения и закрепления.</p>
+                </div>
+                <button type="button" class="btn btn-ghost" onclick="getRandomOldTask()">Выбрать задачу</button>
+                <div id="random-task-result" class="result-zone"></div>
+            </article>
+        </section>
+
+        <section class="card reveal delay-3 task-list">
+            <div class="card-head">
+                <h2>Все задачи</h2>
+                <p>Нажми на карточку, чтобы отредактировать.</p>
+            </div>
+            <div id="tasks-container">Загрузка...</div>
+        </section>
+    </main>
 
     <div id="edit-modal" class="modal" style="display: none;">
         <div class="modal-content">
-            <span class="close">&times;</span>
+            <button class="close" type="button">&times;</button>
             <h2>Редактировать задачу</h2>
-            <form id="edit-form">
+
+            <form id="edit-form" class="task-form compact">
                 <input type="hidden" id="edit-id" name="id">
 
-                <div>
-                    <label>Номер задачи:</label>
-                    <input type="number" id="edit-number" disabled>
+                <div class="grid two">
+                    <label class="field">
+                        <span>Номер задачи</span>
+                        <input type="number" id="edit-number" disabled>
+                    </label>
+                    <label class="field">
+                        <span>Сложность платформы (1-3)</span>
+                        <input type="number" id="edit-platform-difficult" name="platform_difficult" min="1" max="3" required>
+                    </label>
                 </div>
 
-                <div>
-                    <label>Сложность платформы (1-3):</label>
-                    <input type="number" id="edit-platform-difficult" name="platform_difficult" min="1" max="3"
-                        required>
+                <div class="grid two">
+                    <label class="field">
+                        <span>Моя сложность (1-10)</span>
+                        <input type="number" id="edit-my-difficult" name="my_difficult" min="1" max="10" required>
+                    </label>
+                    <label class="field">
+                        <span>Дата решения</span>
+                        <input type="date" id="edit-solved-at" name="solved_at">
+                    </label>
                 </div>
 
-                <div>
-                    <label>Моя сложность (1-10):</label>
-                    <input type="number" id="edit-my-difficult" name="my_difficult" min="1" max="10" required>
-                </div>
-
-                <div>
-                    <label>Описание:</label>
+                <label class="field">
+                    <span>Описание</span>
                     <textarea id="edit-description" name="description" required></textarea>
-                </div>
+                </label>
 
-                <div>
-                    <label>Дата решения:</label>
-                    <input type="date" id="edit-solved-at" name="solved_at">
-                </div>
+                <label class="field">
+                    <span>Метки</span>
+                    <select id="edit-labels" name="labels" multiple required></select>
+                </label>
 
-                <div>
-                    <label>Labels:</label>
-                    <select id="edit-labels" name="labels" multiple required>
-                        <option value="0">Massive</option>
-                        <option value="1">String</option>
-                        <option value="2">HashTable</option>
-                        <option value="3">Math</option>
-                        <option value="4">DynamicProgramming</option>
-                        <option value="5">Sorting</option>
-                        <option value="6">Greedy</option>
-                        <option value="7">DepthFirstSearch</option>
-                        <option value="8">BinarySearch</option>
-                        <option value="9">DataBase</option>
-                        <option value="10">Matrix</option>
-                        <option value="11">BitManipulation</option>
-                        <option value="12">Tree</option>
-                        <option value="13">BreadthFirstSearch</option>
-                        <option value="14">TwoPointers</option>
-                        <option value="15">PrefixSum</option>
-                        <option value="16">Heap</option>
-                        <option value="17">Simulation</option>
-                        <option value="18">Counting</option>
-                        <option value="19">Graph</option>
-                        <option value="20">BinaryTree</option>
-                        <option value="21">Stack</option>
-                        <option value="22">SlidingWindow</option>
-                        <option value="23">Design</option>
-                        <option value="24">Enumeration</option>
-                        <option value="25">Backtracking</option>
-                        <option value="26">UnionFind</option>
-                        <option value="27">NumberTheory</option>
-                        <option value="28">LinkedList</option>
-                        <option value="29">OrderedSet</option>
-                        <option value="30">SegmentTree</option>
-                        <option value="31">MonotonicStack</option>
-                        <option value="32">Trie</option>
-                        <option value="33">DivideAndConquer</option>
-                        <option value="34">Combinatorics</option>
-                        <option value="35">Bitmask</option>
-                        <option value="36">Queue</option>
-                        <option value="37">Recursion</option>
-                        <option value="38">Geometry</option>
-                        <option value="39">BinaryIndexedTree</option>
-                        <option value="40">Memoization</option>
-                        <option value="41">HashFunction</option>
-                        <option value="42">BinarySearchTree</option>
-                        <option value="43">ShortestPath</option>
-                        <option value="44">StringMatching</option>
-                        <option value="45">TopologicalSort</option>
-                        <option value="46">RollingHash</option>
-                        <option value="47">GameTheory</option>
-                        <option value="48">Interactive</option>
-                        <option value="49">DataStream</option>
-                        <option value="50">MonotonicQueue</option>
-                        <option value="51">Brainteaser</option>
-                        <option value="52">DoubleLinkedList</option>
-                        <option value="53">MergeSort</option>
-                        <option value="54">Randomized</option>
-                        <option value="55">CountingSort</option>
-                        <option value="56">Iterator</option>
-                        <option value="57">Concurrency</option>
-                        <option value="58">SuffixArray</option>
-                        <option value="59">LineSweep</option>
-                        <option value="60">ProbabilityAndStatistics</option>
-                        <option value="61">Quickselect</option>
-                        <option value="62">MinimumSpanningTree</option>
-                        <option value="63">BucketSort</option>
-                        <option value="64">Shell</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label>
-                        <input type="checkbox" id="edit-solved-with-hint" name="solved_with_hint"> С подсказкой
+                <div class="toggles">
+                    <label class="check">
+                        <input type="checkbox" id="edit-solved-with-hint" name="solved_with_hint">
+                        <span>С подсказкой</span>
+                    </label>
+                    <label class="check">
+                        <input type="checkbox" id="edit-is-masthaved" name="is_masthaved">
+                        <span>Must-have задача</span>
                     </label>
                 </div>
 
-                <div>
-                    <label>
-                        <input type="checkbox" id="edit-is-masthaved" name="is_masthaved"> Необходимая задача?
-                    </label>
-                </div>
-
-                <button type="submit">Сохранить изменения</button>
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
             </form>
-        </div>
-    </div>
-
-    <div class="random-section">
-        <h3>Случайная задача</h3>
-        <button onclick="getRandomOldTask()">Выбрать случайную задачу</button>
-        <div id="random-task-result">
-        </div>
-    </div>
-
-    <div class="search-section">
-        <h3>Поиск задачи по номеру</h3>
-        <form id="search-form">
-            <input type="number" name="search_number" placeholder="Введите номер задачи" required>
-            <button type="submit">Найти</button>
-        </form>
-        <div id="search-results">
-        </div>
-    </div>
-
-    <div class="task-list">
-        <h2>Все задачи</h2>
-        <div id="tasks-container">
-            Загрузка...
         </div>
     </div>
 
